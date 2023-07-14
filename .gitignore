@@ -1,0 +1,8 @@
+.*
+!/.gitignore
+*.json
+*.pdf
+*.txt
+just_in_case.py
+work.ipynb
+!/genesis_block.json
