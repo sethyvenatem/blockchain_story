@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Perform the mining and generate finished block
 #
-# 12/07/2023 Steven Mathey
+# 15/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -16,18 +16,24 @@ import pytz
 import numpy as np
 import random
 
-def check_chapter_data(chapter_data):
+def check_chapter_data(chapter_data, genesis):
+    # This checks that the chapter to submit does not violate the rules given in the genesis block.
+    
     test = True
     for key in genesis['character_limits'].keys():
         if len(chapter_data[key]) > genesis['character_limits'][key]:
-            warnings.warn('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. It must be shortened before it can be added to the story.')
+            warnings.warn('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
             test = False
-    if int(genesis['number_of_chapters']) < int(chapter_data['chapter_number']):
-        warnings.warn('This story can only have '+str(genesis['number_of_chapters'])+' chapters.')
+    if int(genesis.get('number_of_chapters',1000)) < int(chapter_data['chapter_number']):
+        # Only test that the chapter number is not too large if the field is present in the genesis block. If there are more than 1000 chapters, then this script needs to be updated!
+        warnings.warn('This story can only have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
     return test
 
 def validate_chapter_data(secure_chapter_data):
+    # This validates teh secure chapter data. It checks:
+    #    - that the chapter data complies with the rules of the genesis block
+    #    - that the digital signature of the secure chapter data is right.
     
     test = check_chapter_data(secure_chapter_data['chapter_data'])
     
@@ -53,6 +59,7 @@ def import_json(file_name, stop_if_fail = True):
             return {}
 
 def get_eth_block_info(target_date, success = True):
+    
     api = 'https://eth-mainnet.public.blastapi.io'
     w3 = Web3(Web3.HTTPProvider(api))
     #w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(api))
@@ -104,7 +111,7 @@ if (len(sys.argv)  == 2) and (sys.argv[1] == 'genesis'):
     genesis = import_json('genesis_block.json')
     genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
     genesis['hash'] = genesis_hash
-    file_name = genesis['story_title'].replace(' ','_')+'_0.json'
+    file_name = genesis['story_title'].title().replace(' ','')+'_000.json'
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps({'0':genesis}))
     sys.exit()
@@ -132,7 +139,7 @@ assert mining_date_previous_block+datetime.timedelta(days = int(genesis['nb_days
 new_block = {'secure_chapter_data':secure_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block)}
 
 # Now perform the actual mining!
-# It takes about (1/16)**difficulty tries to find a valid nonce. It takes about 0.000046 seconds for each try. difficulty = 6 should take about 10 minutes.
+# It takes about (16)**difficulty tries to find a valid nonce. It takes about 0.000046 seconds for each try. difficulty = 6 should take about 10 minutes.
 difficulty = 6
 max_hash = int('f'*(64-difficulty),16)
 start_time = datetime.datetime.now(tz = pytz.UTC)
@@ -140,7 +147,7 @@ new_block['mining_date'] = datetime.datetime.strftime(datetime.datetime.now(tz =
 new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
 new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
 nb_tries = 1
-print('Start mining! It should take about '+str(0.000046*((1/16)**difficulty)/60)+' seconds to complete.')
+print('Start mining! It should take about '+str(0.000046*(16**difficulty)/60)+' seconds to complete.')
 while int.from_bytes(new_hash,'big') > max_hash:
     new_block['mining_date'] = datetime.datetime.strftime(datetime.datetime.now(tz = pytz.UTC), '%Y/%m/%d %H:%M:%S')
     new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
@@ -152,6 +159,9 @@ print(try_time,nb_tries,try_time/nb_tries)
 new_block['hash'] = new_hash.hex()
 new_block['nb_tries'] = str(nb_tries)
 story[secure_chapter_data['chapter_data']['chapter_number']] = new_block
-new_file_name = story['0']['story_title'].replace(' ','_')+'_'+secure_chapter_data['chapter_data']['chapter_number']+'.json'
+new_file_name = story['0']['story_title'].title().replace(' ','')+'_'+secure_chapter_data['chapter_data']['chapter_number'].rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
+    
+Keep track of the difficulty
+Make it harder if the mining time is exactly 1 week after the mining time of the previous block.
