@@ -134,7 +134,7 @@ assert str(int(secure_chapter_data['chapter_data']['chapter_number'])-1) in stor
 previous_block = story[str(int(secure_chapter_data['chapter_data']['chapter_number'])-1)]
 
 mining_date_previous_block = pytz.utc.localize(datetime.datetime.strptime(previous_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
-assert mining_date_previous_block+datetime.timedelta(days = int(genesis['nb_days_between_blocks'])) <= datetime.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + genesis['nb_days_between_blocks'] + ' days ago. This block can\'t be validated.'
+assert mining_date_previous_block+datetime.timedelta(days = int(genesis['mining_delay_days'])) <= datetime.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + genesis['mining_delay_days'] + ' days ago. This block can\'t be validated.'
 
 new_block = {'secure_chapter_data':secure_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block)}
 
