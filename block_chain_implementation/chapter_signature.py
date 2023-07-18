@@ -11,7 +11,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information.
 #
 #
-# 15/07/2023 Steven Mathey
+# 18/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -37,13 +37,16 @@ def check_chapter_data(chapter_data, genesis):
 
 def import_json(file_name, stop_if_fail = True):
     
+    if file_name[-5:].lower() != '.json':
+        sys.exit('The file name ('+file_name+') must end with \'.json\'.')
+        
     try:
         return json.load(open(file_name))
     except:
         if stop_if_fail:
-            sys.exit('Something is wrong with '+file_name+'.')
+            sys.exit('Could not find '+file_name+'.')
         else:
-            warnings.warn('Something is wrong with '+file_name+'.')
+            warnings.warn('Could not find '+file_name+'.')
             return {}
 
 def write_chapter_to_file(chapter_data):
@@ -82,12 +85,12 @@ def get_genesis_block(story_title):
     
     sys.exit('The genesis block from this file has been tampered with. Don\'t use it.')
 
-def write_secure_chapter_to_file(secure_chapter_data):
+def write_signed_chapter_to_file(signed_chapter_data):
     
-    chapter_data = secure_chapter_data['chapter_data']
-    securefile_name = 'secure_'+chapter_data['story_title'].title().replace(' ','') + '_' + chapter_data['chapter_number'].rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    with open(securefile_name, "w") as outfile:
-        outfile.write(json.dumps(secure_chapter_data))
+    chapter_data = signed_chapter_data['chapter_data']
+    signedfile_name = 'signed_'+chapter_data['story_title'].title().replace(' ','') + '_' + chapter_data['chapter_number'].rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
+    with open(signedfile_name, "w") as outfile:
+        outfile.write(json.dumps(signed_chapter_data))
         
 ################################# The program starts here ################################################
     
@@ -119,8 +122,8 @@ assert check_chapter_data(chapter_data,genesis), 'The chapter data does not comp
 encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data).encode('utf8'), private_key, 'SHA-256')
 
 # Assemble the signed chapter data and save it as a json file
-secure_chapter_data = {'chapter_data':chapter_data,'encrypted_hashed_chapter': encrypted_hashed_chapter.hex(),'public_key':public_key.save_pkcs1().hex()}
-write_secure_chapter_to_file(secure_chapter_data)
+signed_chapter_data = {'chapter_data':chapter_data,'encrypted_hashed_chapter': encrypted_hashed_chapter.hex(),'public_key':public_key.save_pkcs1().hex()}
+write_signed_chapter_to_file(signed_chapter_data)
 
 # Save the keys to another json file
 public_key = public_key.save_pkcs1().hex()

@@ -1,7 +1,29 @@
 # -----------------------------------------------------------
 # Perform the mining and generate finished block
 #
-# 15/07/2023 Steven Mathey
+#This script validates and adds one block to the existing story. If it is run with a single argument it
+#    - Imports the genesis block. The file name is the argument and the file is placed in the working directory
+#    - Estimate the difficulty of the mining of the first block.
+#    - Computes the hash of the genesis block.
+#    - Save it ['story_title'].title().replace(' ','')+'_000.json' (in the working directory) as the story with the first validated block
+#If it is run with two arguments then it:
+#    - Imports the up-until-now-validated story. The file name is the first argument and the file is placed in the working directory.
+#    - Imports the signed chapter to validate. The file name is the second argument and the file is placed in the working directory.
+#    - It performs as many checks as possible in order to avoid un-necessary mining. It checks that
+#        - The signed chapter data is conform to the rules in the genesis block and is signed correctly
+#        - The chapter number of the block to validate is right.
+#        - The mining date of the previous block is far enough away in the past for the mining of the current block to take place.
+#    - Initialise the block to validate with the hash of the previous block, the hash of the correct block of the ETH blockchain and the provided signed chapter data
+#    - Performs the mining:
+#        - Use the difficulty specified in the previous block
+#        - Pick a nonce at random
+#        - include the nonce, the current date and time, the number of guesses, the difficulty of the next block
+#        - compute the hash of the current value
+#        - retry unless the obtained hash is smaller than the max_hash (determined by the difficulty)
+#    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.#
+#    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
+#
+# 18/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -30,25 +52,29 @@ def check_chapter_data(chapter_data, genesis):
         test = False
     return test
 
-def validate_chapter_data(secure_chapter_data, genesis):
-    # This validates the secure chapter data. It checks:
+def validate_chapter_data(signed_chapter_data, genesis):
+    # This validates the signed chapter data. It checks:
     #    - that the chapter data complies with the rules of the genesis block
-    #    - that the digital signature of the secure chapter data is right.
+    #    - that the digital signature of the signed chapter data is right.
     
-    test = check_chapter_data(secure_chapter_data['chapter_data'], genesis)
+    test = check_chapter_data(signed_chapter_data['chapter_data'], genesis)
     
-    clear_chapter_data = json.dumps(secure_chapter_data['chapter_data']).encode('utf8')
-    encrypted_hashed_chapter = bytes.fromhex(secure_chapter_data['encrypted_hashed_chapter'])
-    public_key = rsa.PublicKey.load_pkcs1(bytes.fromhex(secure_chapter_data['public_key']))
+    clear_chapter_data = json.dumps(signed_chapter_data['chapter_data']).encode('utf8')
+    encrypted_hashed_chapter = bytes.fromhex(signed_chapter_data['encrypted_hashed_chapter'])
+    public_key = rsa.PublicKey.load_pkcs1(bytes.fromhex(signed_chapter_data['public_key']))
     try:
         temp = rsa.verify(clear_chapter_data, encrypted_hashed_chapter, public_key) == 'SHA-256'
     except:
         test = False
-        warnings.warn('The secure chapter data has been modified. Don\'t validate it.')
+        warnings.warn('The signed chapter data has been modified. Don\'t validate it.')
     
     return test
 
 def import_json(file_name, stop_if_fail = True):
+    
+    if file_name[-5:].lower() != '.json':
+        sys.exit('The file name ('+file_name+') must end with \'.json\'.')
+        
     try:
         return json.load(open(file_name))
     except:
@@ -133,40 +159,38 @@ def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty):
 
 ################################# The program starts here ################################################
 
-# To create the first block (and associated story json file), use the options specified in genesis_block.json. If the first block already exists, then place it in the working directory and give the file name as an argument.
-if (len(sys.argv)  == 2) and (sys.argv[1] == 'genesis'):
-    genesis = {}
-    genesis['block_content'] = import_json('genesis_block.json')
-    genesis['block_content']['difficulty'] = time_to_mine_days(float(genesis['block_content']['intended_mining_time_days']),inverse = True)
+if len(sys.argv) == 2:
+    # The input is the genesis block. There is no story yet.
+    genesis = import_json(sys.argv[1])
+    genesis['difficulty'] = time_to_mine_days(float(genesis['block_content']['intended_mining_time_days']),inverse = True)
+    genesis = {'block_content': genesis.copy()}
     genesis_hash = rsa.compute_hash(json.dumps(genesis['block_content']).encode('utf8'), 'SHA-256').hex()
     genesis['hash'] = genesis_hash
     file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000.json'
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps({'0':genesis}))
     sys.exit()
-else:
-    # The file is named as [story title with underscores instead of spaces]_[largest validated chapter number].json
-    file_name = sys.argv[1]
+    
+# Import the data to validate
+story = import_json(sys.argv[1])
+signed_chapter_data = import_json(sys.arv[2])
 
-# Import the block to validate and check that the chapter data is valid.
-chapter_data_to_validate = input('Type in the file name of the chapter to validate: ')
-if chapter_data_to_validate[-5:].lower() != '.json':
-    sys.exit('The file name must end with \'.json\'.')
-secure_chapter_data = import_json(chapter_data_to_validate)
-story = import_json(file_name)
+# Check that the chapter data is valid.
 genesis = story['0']['block_content']
-assert validate_chapter_data(secure_chapter_data, genesis), 'The secure chapter data does not comply with the rules of this story.'
+assert validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.'
 
 # Import the story up until now, check that the number of the provided chapter is 1+ the largers block number and extract the previous block.
-assert str(int(secure_chapter_data['chapter_data']['chapter_number'])-1) in story.keys(), 'The chapter number of the block to add is not the last chapter number of the story.'
-previous_block = story[str(int(secure_chapter_data['chapter_data']['chapter_number'])-1)]
+assert int(signed_chapter_data['chapter_data']['chapter_number'])-1 == max([int(n) for n in story.keys()]), 'The chapter number of the block to add is not the last chapter number of the story.'
+
+previous_block = story[str(int(signed_chapter_data['chapter_data']['chapter_number'])-1)]
 
 # Get the mining date of the previous block and check that far enough in the past.
 mining_date_previous_block = pytz.utc.localize(datetime.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
-assert mining_date_previous_block+datetime.timedelta(days = float(genesis['mining_delay_days'])) <= datetime.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + genesis['mining_delay_days'] + ' days ago. This block can\'t be validated.'
+mining_delay = datetime.timedelta(days = float(genesis['mining_delay_days']))
+assert mining_date_previous_block + mining_delay <= datetime.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + genesis['mining_delay_days'] + ' days ago. This block can\'t be validated.'
 
 # Initialise the new block
-new_block = {'secure_chapter_data':secure_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block)}
+new_block = {'signed_chapter_data':signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay)}
 
 # Now perform the actual mining!
 # It takes about (2)**difficulty tries to find a valid nonce. It takes about 0.0002 seconds for each try. difficulty = 24 should take about 10 minutes.
@@ -176,7 +200,7 @@ new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficu
 max_hash = 2**(256-difficulty)-1
 print('Start mining! On my computer, it takes about '+str(time_to_mine_days(difficulty)/24)+' hours to complete.')
 nb_tries = 1
-start_time = new_block['mining_date']
+start_time = pytz.utc.localize(datetime.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
 new_block['nb_tries'] = str(nb_tries)
 new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
 new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
@@ -189,12 +213,9 @@ while int.from_bytes(new_hash,'big') > max_hash:
                            
 try_time = datetime.datetime.now(tz = pytz.UTC)-start_time
 print(try_time,nb_tries,try_time/nb_tries)
-new_block['block_content'] = new_block
+new_block = {'block_content': new_block.copy()}
 new_block['hash'] = new_hash.hex()
-story[secure_chapter_data['chapter_data']['chapter_number']] = new_block
-new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+secure_chapter_data['chapter_data']['chapter_number'].rjust(3, '0')+'.json'
+story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
+new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+signed_chapter_data['chapter_data']['chapter_number'].rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
-    
-#Keep track of the difficulty
-#Make it harder if the mining time is exactly 1 week after the mining time of the previous block.
