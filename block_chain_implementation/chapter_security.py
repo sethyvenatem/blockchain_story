@@ -5,7 +5,7 @@
 #    - It generates a *.json file with the chapter data together with the digital signature and places it in the local directory.
 #    - It generates a *.json file with the private and public keys that were used to sign the chapter data and places it in the local directory.
 #    - It generates a readable *.txt file with all the provided chapter data.
-
+#
 #The chapter data can be provided in two ways:
 #    - Place it in a json file called 'chapter_data.json', put the file in the same directory as the script and call the script with the json argument.
 #    - Call the script with no argument. Then the script prompts the user for the necessary information.
@@ -73,8 +73,8 @@ def get_genesis_block(story_title):
     
     blockchain = import_json(file_name, False)
     
-    genesis = blockchain['0']
-    provided_hash = genesis.pop('hash')
+    provided_hash = blockchain['0']['hash']
+    genesis = blockchain['0']['block_content']
     genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
     
     if genesis_hash == provided_hash:

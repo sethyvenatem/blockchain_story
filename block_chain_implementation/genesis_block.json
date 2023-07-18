@@ -1,1 +1,14 @@
-{"story_title": "test story", "chapter_number": "0", "author": "Steven Mathey", "character_limits": {"chapter_title": 150, "author": 1000, "text": 30000}, "number_of_chapters": "10", "mining_delay_days": "7", "intended_mining_time_days": "2","mining_date":"2023/07/02 00:00:00","difficulty":"5"}
+{
+	"story_title": "test story",
+	"chapter_number": "0",
+	"author": "Steven Mathey",
+	"character_limits": {
+		"chapter_title": 150,
+		"author": 1000,
+		"text": 30000
+	},
+	"number_of_chapters": "10",
+	"mining_delay_days": "0.0006944444444444445",
+	"intended_mining_time_days": "0.0006944444444444445",
+	"mining_date": "2023/07/17 21:21:00"
+}
