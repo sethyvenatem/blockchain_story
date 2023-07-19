@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.#
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 18/07/2023 Steven Mathey
+# 19/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -31,7 +31,7 @@ import json
 import warnings
 import rsa
 import io
-import datetime
+import datetime as dt
 import sys
 from web3 import Web3, AsyncWeb3
 import pytz
@@ -46,15 +46,15 @@ def check_chapter_data(chapter_data, genesis):
         if len(chapter_data[key]) > genesis['character_limits'][key]:
             warnings.warn('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
             test = False
-    if int(genesis.get('number_of_chapters',1000)) < int(chapter_data['chapter_number']):
-        # Only test that the chapter number is not too large if the field is present in the genesis block. If there are more than 1000 chapters, then this script needs to be updated!
+    if int(genesis.get('number_of_chapters',np.inf)) < int(chapter_data['chapter_number']):
+        # Only test that the chapter number is not too large if the field is present in the genesis block.
         warnings.warn('This story can only have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
     return test
 
 def validate_chapter_data(signed_chapter_data, genesis):
     # This validates the signed chapter data. It checks:
-    #    - that the chapter data complies with the rules of the genesis block
+    #    - that the chapter data complies with the rules of the genesis block.
     #    - that the digital signature of the signed chapter data is right.
     
     test = check_chapter_data(signed_chapter_data['chapter_data'], genesis)
@@ -70,7 +70,7 @@ def validate_chapter_data(signed_chapter_data, genesis):
     
     return test
 
-def import_json(file_name, stop_if_fail = True):
+def import_json(file_name):
     
     if file_name[-5:].lower() != '.json':
         sys.exit('The file name ('+file_name+') must end with \'.json\'.')
@@ -78,45 +78,44 @@ def import_json(file_name, stop_if_fail = True):
     try:
         return json.load(open(file_name))
     except:
-        if stop_if_fail:
-            sys.exit('Could not find '+file_name+'.')
-        else:
-            warnings.warn('Could not find '+file_name+'.')
-            return {}
+        sys.exit('Could not find '+file_name+'.')
 
-def get_eth_block_info(target_date, success = True):
+def get_eth_block_info(target_date, retry = True):
+    # This finds the right block from the ETH blockchain and returns its hash value.
+    # The block is the first block that comes after the target_date.
+    # The algorithm starts from the current block and makes a conservative guess to jump to another block in the past. Then it uses the timestamp of the obtained block as a new current date. It repeates this until the obtained block timestamp is before the targed_date. The corresponding block should be just before the target block.
+    # This works fine, but can fail if one block is missing (time interval betwen block is more than 12 seconds) close to the target block. In that case, the obtained block is to far in the past. Then, the block number is increased one-by-one until the block timestamp passed again.
+    # The search terminates if it lasts more than 5 minutes.
     
     api = 'https://eth-mainnet.public.blastapi.io'
     w3 = Web3(Web3.HTTPProvider(api))
-    #w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(api))
-    #w3 = Web3(Web3.WebsocketProvider(api))
     if target_date.tzinfo is None:
         target_date = pytz.utc.localize(target_date)
 
-    start_time = datetime.datetime.now(tz = pytz.UTC)
+    start_time = dt.datetime.now(tz = pytz.UTC)
     approx_nb_blocks = int(np.ceil((start_time-target_date).total_seconds()/(12.5)))
     latest_block = w3.eth.get_block('latest').number
     target_block = latest_block - approx_nb_blocks
-    block_timestamp = pytz.utc.localize(datetime.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
+    block_timestamp = pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
 
-    while (block_timestamp > target_date) & (datetime.datetime.now(tz = pytz.UTC) < start_time+datetime.timedelta(minutes = 5)):
+    while (block_timestamp > target_date) & (dt.datetime.now(tz = pytz.UTC) < start_time+dt.timedelta(minutes = 5)):
         # stop if the function iterates for more than 5 minutes.
         approx_nb_blocks = int(np.ceil((block_timestamp-target_date).total_seconds()/(12.5)))
         target_block = target_block - approx_nb_blocks
-        block_timestamp = pytz.utc.localize(datetime.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
+        block_timestamp = pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
     target_block += 1
     
-    if (pytz.utc.localize(datetime.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
-        # If we overshoot, come back one block at a time. This should only happen when a block is missing close to the targed time.
-        while (pytz.utc.localize(datetime.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
+    if (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
+        # If we overshoot, come back one block at a time. This should only happen when a block is missing close to the target time.
+        while (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
             target_block += 1
     
-    if ((datetime.datetime.now(tz = pytz.UTC) > start_time+datetime.timedelta(minutes = 5)) or 
+    if ((dt.datetime.now(tz = pytz.UTC) > start_time+dt.timedelta(minutes = 5)) or 
         (block_timestamp > target_date) or 
-        (pytz.utc.localize(datetime.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date) or
-        (pytz.utc.localize(datetime.datetime.utcfromtimestamp(w3.eth.get_block(target_block-1).timestamp)) > target_date)):
+        (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date) or
+        (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block-1).timestamp)) > target_date)):
         # check that the search did not time out, that it passed the target block, that the target block is after the target date and that the block just before the target block is before the target date.
-        if success:
+        if retry:
             # Try a second time in case that it's a network problem.
             target_block = get_eth_block_info(target_date, False)
             if target_block is None:
@@ -142,12 +141,12 @@ def time_to_mine_days(diff_or_time,inverse = False):
 
 def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty):
     
-    mining_date = datetime.datetime.now(tz = pytz.UTC)
-    mining_delay = datetime.timedelta(days = float(genesis['mining_delay_days']))
-    intended_mining_time = datetime.timedelta(days = float(genesis['intended_mining_time_days']))
+    mining_date = dt.datetime.now(tz = pytz.UTC)
+    mining_delay = dt.timedelta(days = float(genesis['mining_delay_days']))
+    intended_mining_time = dt.timedelta(days = float(genesis['intended_mining_time_days']))
     grace = 0.25*intended_mining_time
     
-    new_block['mining_date'] = datetime.datetime.strftime(mining_date, '%Y/%m/%d %H:%M:%S')
+    new_block['mining_date'] = dt.datetime.strftime(mining_date, '%Y/%m/%d %H:%M:%S')
       
     if mining_date > mining_date_previous_block + mining_delay + intended_mining_time + grace:
         new_block['difficulty'] = difficulty - 1
@@ -185,9 +184,9 @@ assert int(signed_chapter_data['chapter_data']['chapter_number'])-1 == max([int(
 previous_block = story[str(int(signed_chapter_data['chapter_data']['chapter_number'])-1)]
 
 # Get the mining date of the previous block and check that far enough in the past.
-mining_date_previous_block = pytz.utc.localize(datetime.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
-mining_delay = datetime.timedelta(days = float(genesis['mining_delay_days']))
-assert mining_date_previous_block + mining_delay <= datetime.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + genesis['mining_delay_days'] + ' days ago. This block can\'t be validated.'
+mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
+mining_delay = dt.timedelta(days = float(genesis['mining_delay_days']))
+assert mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + genesis['mining_delay_days'] + ' days ago. This block can\'t be validated.'
 
 # Initialise the new block
 new_block = {'signed_chapter_data':signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay)}
@@ -200,7 +199,7 @@ new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficu
 max_hash = 2**(256-difficulty)-1
 print('Start mining! On my computer, it takes about '+str(time_to_mine_days(difficulty)/24)+' hours to complete.')
 nb_tries = 1
-start_time = pytz.utc.localize(datetime.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
+start_time = pytz.utc.localize(dt.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
 new_block['nb_tries'] = str(nb_tries)
 new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
 new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
@@ -211,7 +210,7 @@ while int.from_bytes(new_hash,'big') > max_hash:
     new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
     new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
                            
-try_time = datetime.datetime.now(tz = pytz.UTC)-start_time
+try_time = dt.datetime.now(tz = pytz.UTC)-start_time
 print(try_time,nb_tries,try_time/nb_tries)
 new_block = {'block_content': new_block.copy()}
 new_block['hash'] = new_hash.hex()
