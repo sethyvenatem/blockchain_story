@@ -11,7 +11,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information.
 #
 #
-# 19/07/2023 Steven Mathey
+# 20/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -29,7 +29,7 @@ def check_chapter_data(chapter_data, genesis):
         if len(chapter_data[key]) > genesis['character_limits'][key]:
             warnings.warn('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
             test = False
-    if int(genesis.get('number_of_chapters',np.inf)) < int(chapter_data['chapter_number']):
+    if genesis.get('number_of_chapters',np.inf) < chapter_data['chapter_number']:
         # Only test that the chapter number is not too large if the field is present in the genesis block.
         warnings.warn('This story can only have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
