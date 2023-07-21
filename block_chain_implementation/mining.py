@@ -20,7 +20,7 @@
 #        - include the nonce, the current date and time, the number of guesses, the difficulty of the next block
 #        - compute the hash of the current value
 #        - retry unless the obtained hash is smaller than the max_hash (determined by the difficulty)
-#    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.#
+#    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
 # 21/07/2023 Steven Mathey
@@ -28,7 +28,6 @@
 # -----------------------------------------------------------
 
 import json
-import warnings
 import rsa
 import io
 import datetime as dt
@@ -44,11 +43,11 @@ def check_chapter_data(chapter_data, genesis):
     test = True
     for key in genesis['character_limits'].keys():
         if len(chapter_data[key]) > genesis['character_limits'][key]:
-            warnings.warn('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
+            print('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
             test = False
     if genesis.get('number_of_chapters',np.inf) < chapter_data['chapter_number']:
         # Only test that the chapter number is not too large if the field is present in the genesis block.
-        warnings.warn('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
+        print('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
     return test
 
@@ -66,7 +65,7 @@ def validate_chapter_data(signed_chapter_data, genesis):
         temp = rsa.verify(clear_chapter_data, encrypted_hashed_chapter, public_key) == 'SHA-256'
     except:
         test = False
-        warnings.warn('The signed chapter data has been modified. Don\'t validate it.')
+        print('The signed chapter data has been modified. Don\'t validate it.')
     
     return test
 
@@ -121,12 +120,12 @@ def get_eth_block_info(target_date, retry = True):
             if target_block is None:
                 return None
         else:
-            warnings.warn('Could not find ETH block.')
-            return None
+            print('Could not find ETH block.')
+            sys.exit(0)
         
     if w3.eth.get_block('finalized').number < target_block:
         # If the obtained block number is larger than the last finalised block number, then warn the user.
-        warnings.warn('The ETH block is not finalised yet. Wait about 15 minutes to be sure to mine effectively.')
+        print('The ETH block is not finalised yet. Wait about 15 minutes to be sure to mine effectively.')
         
     return w3.eth.get_block(target_block).hash.hex()
 
@@ -162,13 +161,19 @@ def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, min
         new_block['difficulty'] = difficulty
     return new_block
 
+def check(statement,message):
+    if not(statement):
+        print(message)
+        sys.exit()
+        
 ################################# The program starts here ################################################
 
 if len(sys.argv) == 2:
     # The input is the genesis block without its hash value.
     genesis = import_json(sys.argv[1])
-    assert 'intended_mining_time_days' in genesis.keys(), 'The provided file is not a valid genesis block.'
-    genesis['difficulty'] = estimate_difficulty(genesis['intended_mining_time_days'])
+    check('intended_mining_time_days' in genesis.keys(), 'The provided file is not a valid genesis block.')
+    if 'difficulty' not in genesis.keys():
+        genesis['difficulty'] = estimate_difficulty(genesis['intended_mining_time_days'])
     genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
     genesis = {'block_content': genesis.copy()}
     genesis['hash'] = genesis_hash
@@ -179,20 +184,20 @@ if len(sys.argv) == 2:
     
 # Import the data to validate
 story = import_json(sys.argv[1])
-signed_chapter_data = import_json(sys.arv[2])
+signed_chapter_data = import_json(sys.argv[2])
 
 # Check that the chapter data is valid.
 genesis = story['0']['block_content']
-assert validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.'
+check(validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.')
 
 # Check that the number of the provided chapter is 1 + the largest block number and extract the previous block.
-assert signed_chapter_data['chapter_data']['chapter_number']-1 == max([int(n) for n in story.keys()]), 'The chapter number of the block to add is not the last chapter number of the story.'
+check(signed_chapter_data['chapter_data']['chapter_number']-1 == max([int(n) for n in story.keys()]), 'The chapter number of the block to add is not the last chapter number of the story.')
 previous_block = story[str(signed_chapter_data['chapter_data']['chapter_number']-1)]
 
 # Get the mining date of the previous block and check that it is far enough in the past.
 mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
 mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
-assert mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now.'
+check(mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now.')
 
 # Initialise the new block
 new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay)}
@@ -221,6 +226,6 @@ print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tr
 new_block = {'block_content': new_block.copy()}
 new_block['hash'] = new_hash.hex()
 story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
-new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+signed_chapter_data['chapter_data']['chapter_number'].rjust(3, '0')+'.json'
+new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))

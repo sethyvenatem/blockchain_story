@@ -7,7 +7,7 @@
 #    - It generates a readable *.txt file with all the provided chapter data.
 #
 #The chapter data can be provided in two ways:
-#    - Place it in a json file called 'chapter_data.json', put the file in the same directory as the script and call the script with the json argument. The json file must have the following fields: 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The 'chapter_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
+#    - Place it in a json file, put the file in the same directory as the script and call the script with the name of the file as argument. The json file must have the following fields: 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The 'chapter_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
 #    - Call the script with no argument. Then the script prompts the user for the necessary information.
 #
 #
@@ -15,11 +15,11 @@
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
-import warnings
 import rsa
 import io
 import sys
 import glob
+import numpy as np
 
 def check_chapter_data(chapter_data, genesis):
     # This checks that the chapter to submit does not violate the rules given in the genesis block.
@@ -27,11 +27,11 @@ def check_chapter_data(chapter_data, genesis):
     test = True
     for key in genesis['character_limits'].keys():
         if len(chapter_data[key]) > genesis['character_limits'][key]:
-            warnings.warn('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
+            print('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
             test = False
     if genesis.get('number_of_chapters',np.inf) < chapter_data['chapter_number']:
         # Only test that the chapter number is not too large if the field is present in the genesis block.
-        warnings.warn('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
+        print('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
     return test
 
@@ -44,15 +44,16 @@ def import_json(file_name, stop_if_fail = True):
         return json.load(open(file_name))
     except:
         if stop_if_fail:
-            sys.exit('Could not find '+file_name+'.')
+            print('Could not find '+file_name+'.')
+            sys.exit(0)
         else:
-            warnings.warn('Could not find '+file_name+'.')
+            print('Could not find '+file_name+'.')
             return {}
 
 def write_chapter_to_readable_file(chapter_data):
     # This makes a readable text file with all the data provided by the author.
     
-    to_write = [(k.replace('_',' ')+':').title() + ' ' + chapter_data[k]+'\n\n' for k in chapter_data.keys() if k!='text']
+    to_write = [(k.replace('_',' ')+':').title() + ' ' + str(chapter_data[k])+'\n\n' for k in chapter_data.keys() if k!='text']
     to_write.append('\n\n\n' + chapter_data['text'])
     
     file_name = (chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.txt')
@@ -69,7 +70,7 @@ def get_genesis_block(story_title):
     files = [x[:-5] for x in files if x.startswith(story_title)]
     
     if len(files) == 0:
-        warnings.warn('The genesis block is not validated.')
+        print('The genesis block is not validated.')
         return import_json('genesis_block.json', False)
     
     block_number = max([int(x[-3:]) for x in files])
@@ -94,18 +95,25 @@ def write_signed_chapter_to_file(signed_chapter_data):
         outfile.write(json.dumps(signed_chapter_data))
 
 def write_keys_to_file(public_key,private_key):
+    
     public_key = public_key.save_pkcs1().hex()
     private_key = private_key.save_pkcs1().hex()
     keys = {'public_key': public_key, 'private_key': private_key}
     keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
     with open(keys_file_name, "w") as outfile:
         outfile.write(json.dumps(keys))
+
+def check(statement,message):
+    if not(statement):
+        print(message)
+        sys.exit()
         
 ################################# The program starts here ################################################
     
 # Get the chapter data
-if (len(sys.argv)  == 2) and (sys.argv[1] == 'json'):
-    chapter_data = import_json('chapter_data.json')
+if (len(sys.argv)  == 2):
+    file_name = sys.argv[1]
+    chapter_data = import_json(file_name)
 else:
     print('Please provide the chapter data.')
     chapter_data = {}
@@ -121,9 +129,9 @@ else:
         sys.exit('The file name must end with \'.txt\'.')
 
 genesis = get_genesis_block(chapter_data['story_title'])
-    
+
 # Check that the chapter fits the constraints
-assert check_chapter_data(chapter_data, genesis), 'The chapter data does not comply with the rules of this story.'
+check(check_chapter_data(chapter_data, genesis),'The chapter data does not comply with the rules of this story.')
 
 # Generate public and private keys
 (public_key, private_key) = rsa.newkeys(1024)
