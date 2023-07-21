@@ -7,11 +7,11 @@
 #    - It generates a readable *.txt file with all the provided chapter data.
 #
 #The chapter data can be provided in two ways:
-#    - Place it in a json file called 'chapter_data.json', put the file in the same directory as the script and call the script with the json argument.
+#    - Place it in a json file called 'chapter_data.json', put the file in the same directory as the script and call the script with the json argument. The json file must have the following fields: 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The 'chapter_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
 #    - Call the script with no argument. Then the script prompts the user for the necessary information.
 #
 #
-# 20/07/2023 Steven Mathey
+# 21/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -31,7 +31,7 @@ def check_chapter_data(chapter_data, genesis):
             test = False
     if genesis.get('number_of_chapters',np.inf) < chapter_data['chapter_number']:
         # Only test that the chapter number is not too large if the field is present in the genesis block.
-        warnings.warn('This story can only have more than '+str(genesis['number_of_chapters'])+' chapters.')
+        warnings.warn('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
     return test
 
@@ -49,13 +49,13 @@ def import_json(file_name, stop_if_fail = True):
             warnings.warn('Could not find '+file_name+'.')
             return {}
 
-def write_chapter_to_file(chapter_data):
+def write_chapter_to_readable_file(chapter_data):
     # This makes a readable text file with all the data provided by the author.
     
     to_write = [(k.replace('_',' ')+':').title() + ' ' + chapter_data[k]+'\n\n' for k in chapter_data.keys() if k!='text']
     to_write.append('\n\n\n' + chapter_data['text'])
     
-    file_name = (chapter_data['story_title'].title().replace(' ','') + '_' + chapter_data['chapter_number'].rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.txt')
+    file_name = (chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.txt')
     
     with open(file_name, "w") as outfile:
         outfile.writelines(to_write)
@@ -64,15 +64,16 @@ def get_genesis_block(story_title):
     # Get the genesis block. Use the validated blockchain file if available and default to the local file 'genesis_block.json' if not.
     # With the validated blockchain, check the integrity of the genesis block and stop the script if the hash value does not match.
     
+    story_title = story_title.title().replace(' ','')+'_'
     files = glob.glob('*.json')
-    files = [x[:-5] for x in files if x.startswith(story_title.title().replace(' ','')+'_')]
+    files = [x[:-5] for x in files if x.startswith(story_title)]
     
     if len(files) == 0:
         warnings.warn('The genesis block is not validated.')
         return import_json('genesis_block.json', False)
     
     block_number = max([int(x[-3:]) for x in files])
-    file_name = story_title.title().replace(' ','')+'_'+str(block_number).rjust(3, '0')+'.json'
+    file_name = story_title+str(block_number).rjust(3, '0')+'.json'
     
     blockchain = import_json(file_name, False)
     
@@ -88,9 +89,17 @@ def get_genesis_block(story_title):
 def write_signed_chapter_to_file(signed_chapter_data):
     
     chapter_data = signed_chapter_data['chapter_data']
-    signedfile_name = 'signed_'+chapter_data['story_title'].title().replace(' ','') + '_' + chapter_data['chapter_number'].rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    with open(signedfile_name, "w") as outfile:
+    signed_file_name = 'signed_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
+    with open(signed_file_name, "w") as outfile:
         outfile.write(json.dumps(signed_chapter_data))
+
+def write_keys_to_file(public_key,private_key):
+    public_key = public_key.save_pkcs1().hex()
+    private_key = private_key.save_pkcs1().hex()
+    keys = {'public_key': public_key, 'private_key': private_key}
+    keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
+    with open(keys_file_name, "w") as outfile:
+        outfile.write(json.dumps(keys))
         
 ################################# The program starts here ################################################
     
@@ -101,7 +110,7 @@ else:
     print('Please provide the chapter data.')
     chapter_data = {}
     chapter_data['story_title'] = input('Story title: ')
-    chapter_data['chapter_number'] = input('Chapter number: ')
+    chapter_data['chapter_number'] = int(input('Chapter number: '))
     chapter_data['author'] = input('Author name: ')
     chapter_data['chapter_title'] = input('Chapter title: ')
     text_file_name = input('File name for the chapter text (use a *.txt file): ')
@@ -114,7 +123,7 @@ else:
 genesis = get_genesis_block(chapter_data['story_title'])
     
 # Check that the chapter fits the constraints
-assert check_chapter_data(chapter_data,genesis), 'The chapter data does not comply with the rules of this story.'
+assert check_chapter_data(chapter_data, genesis), 'The chapter data does not comply with the rules of this story.'
 
 # Generate public and private keys
 (public_key, private_key) = rsa.newkeys(1024)
@@ -122,16 +131,11 @@ assert check_chapter_data(chapter_data,genesis), 'The chapter data does not comp
 encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data).encode('utf8'), private_key, 'SHA-256')
 
 # Assemble the signed chapter data and save it as a json file
-signed_chapter_data = {'chapter_data':chapter_data,'encrypted_hashed_chapter': encrypted_hashed_chapter.hex(),'public_key':public_key.save_pkcs1().hex()}
+signed_chapter_data = {'chapter_data': chapter_data,'encrypted_hashed_chapter': encrypted_hashed_chapter.hex(),'public_key': public_key.save_pkcs1().hex()}
 write_signed_chapter_to_file(signed_chapter_data)
 
 # Save the keys to another json file
-public_key = public_key.save_pkcs1().hex()
-private_key = private_key.save_pkcs1().hex()
-keys = {'public_key': public_key, 'private_key': private_key}
-keys = json.dumps(keys)
-with open("keys.json", "w") as outfile:
-    outfile.write(keys)
+write_keys_to_file(public_key,private_key)
     
-# generate a single .txt file to read the chapter
-write_chapter_to_file(chapter_data)
+# generate a single readable *.txt file with the chapter data
+write_chapter_to_readable_file(chapter_data)
