@@ -190,14 +190,14 @@ signed_chapter_data = import_json(sys.argv[2])
 genesis = story['0']['block_content']
 check(validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.')
 
-# Check that the number of the provided chapter is 1 + the largest block number and extract the previous block.
+# Check that the number of the provided chapter is one plus the largest block number and extract the previous block.
 check(signed_chapter_data['chapter_data']['chapter_number']-1 == max([int(n) for n in story.keys()]), 'The chapter number of the block to add is not the last chapter number of the story.')
 previous_block = story[str(signed_chapter_data['chapter_data']['chapter_number']-1)]
 
 # Get the mining date of the previous block and check that it is far enough in the past.
 mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
 mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
-check(mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now.')
+check(mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - dt.datetime.now(tz = pytz.UTC)) + '.')
 
 # Initialise the new block
 new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay)}
@@ -229,3 +229,5 @@ story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
 new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
+    
+Add a miner name field to each block
