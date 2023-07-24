@@ -13,23 +13,23 @@ This blockchain is not about currencies or any type of transactions. Instead it'
 The details of the rules to add a chapter to the story are inserted in the first block, the genesis block. This block contains the information necessary for 'narrative' as well as 'blockchain' rules.
 
 The 'narrative' rules are:
-    - The title of the story is fixed at the beginning and must be repeated correctly in each block.
-    - The amount of characters in the chapter title, author name and chapter text is limited.
-    - The total amount of chapters in the story is limited.
+- The title of the story is fixed at the beginning and must be repeated correctly in each block.
+- The amount of characters in the chapter title, author name and chapter text is limited.
+- The total amount of chapters in the story is limited.
 These narrative rules can be different for every new story. Except for the story title, they are actually even optional. To skip any of them, the user can just ommit the corresponding field in the genesis block. These rules are imposed by first validating the genesis block and then checking each new block against it.
 
 The 'blockchain' rules are:
-    - Every block keeps track of its mining date.
-    - There is an imposed delay between the mining of two consecutive blocks.
-    - Each block contains a difficulty parameter that is determined by the block's mining time and is applied to the next block.
-    - The difficulty is adjusted unless the intended mining time is reached. 
+- Every block keeps track of its mining date.
+- There is an imposed delay between the mining of two consecutive blocks.
+- Each block contains a difficulty parameter that is determined by the block's mining time and is applied to the next block.
+- The difficulty is adjusted unless the intended mining time is reached. 
 These rules are imposed with the use of different systems:
-    - Although it is possible for the miner to lie about the mining date, this is restricted and descentivised:
-        - The mining date of any given block must be at least later than the mining date of the previous block plus the set delay.
-        - It is possible for a miner to write a date in the blockchain that is earlier than the actual mining date. This will enablem them to reduce the intended delay between blocks and start mining the next block faster than expected. This will however also increase the difficulty of the next block and thus make the actual mining longer.
-        - The miners can freely report a mining date that is later than the actual mining date. They however run the risk that another miner validates a block with an earlier mining date. Then this block which will then have finality over their block and they will loose the invested mining work.
-        - The miner is preventef from pre-mining a block (with a reported mining date in the future) before the set delay by the requirement that the hash value of a specific block from the Ethereum blockchain be present in each block (except for the genesis block). The block is defined to be the earliest block following the earliest authorised mining date.
-    - The mining time is actually not recorded but is assumed to be the time interval between the current mining date and the sum of the mining date of the previous block, the mining delay and the intended mining time. If this interval is shorter than three quarters of the intended mining time, then the difficulty parameter is decreased by one. If it is longer than five quarters of the intended mining time, then the difficulty is decreased by one. In the other cases, the difficulty parameter is not changed.
+- Although it is possible for the miner to lie about the mining date, this is restricted and descentivised:
+    - The mining date of any given block must be at least later than the mining date of the previous block plus the set delay.
+    - It is possible for a miner to write a date in the blockchain that is earlier than the actual mining date. This will enablem them to reduce the intended delay between blocks and start mining the next block faster than expected. This will however also increase the difficulty of the next block and thus make the actual mining longer.
+    - The miners can freely report a mining date that is later than the actual mining date. They however run the risk that another miner validates a block with an earlier mining date. Then this block which will then have finality over their block and they will loose the invested mining work.
+    - The miner is preventef from pre-mining a block (with a reported mining date in the future) before the set delay by the requirement that the hash value of a specific block from the Ethereum blockchain be present in each block (except for the genesis block). The block is defined to be the earliest block following the earliest authorised mining date.
+- The mining time is actually not recorded but is assumed to be the time interval between the current mining date and the sum of the mining date of the previous block, the mining delay and the intended mining time. If this interval is shorter than three quarters of the intended mining time, then the difficulty parameter is decreased by one. If it is longer than five quarters of the intended mining time, then the difficulty is decreased by one. In the other cases, the difficulty parameter is not changed.
 
 The reported mining date is used to decide if a block is finalised. In the case of a branching story, the branch withe the earliest mining date at the branch point is valid.
 
