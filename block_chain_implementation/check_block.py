@@ -5,6 +5,14 @@
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
+Use file name as input.
+
+From file_name, load json and look at keys.
+
+Go from simle to complex:
+    - if keys of chapter_data, check
+    - if keys of signed_chapter_data, check
+    ..
 
 Import block
 Local checks:

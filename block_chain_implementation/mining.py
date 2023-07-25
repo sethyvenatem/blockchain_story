@@ -1,12 +1,12 @@
 # -----------------------------------------------------------
 # Perform the mining and generate finished block
 #
-#This script validates and adds one block to the existing story. If it is run with a single argument it
-#    - Imports the genesis block. The file name is the argument and the file is placed in the working directory
+#This script validates and adds one block to the existing story. If it is run with two arguments it
+#    - Imports the genesis block. The file name is the first argument and the file is placed in the working directory.
 #    - Estimate the difficulty of the mining of the first block.
 #    - Computes the hash of the genesis block.
 #    - Save it ['story_title'].title().replace(' ','')+'_000.json' (in the working directory) as the story with the first validated block
-#If it is run with two arguments then it:
+#If it is run with three arguments then it:
 #    - Imports the up-until-now-validated story. The file name is the first argument and the file is placed in the working directory.
 #    - Imports the signed chapter to validate. The file name is the second argument and the file is placed in the working directory.
 #    - It performs as many checks as possible in order to avoid un-necessary mining. It checks that
@@ -168,12 +168,15 @@ def check(statement,message):
         
 ################################# The program starts here ################################################
 
-if len(sys.argv) == 2:
+if len(sys.argv) <= 3:
     # The input is the genesis block without its hash value.
     genesis = import_json(sys.argv[1])
     check('intended_mining_time_days' in genesis.keys(), 'The provided file is not a valid genesis block.')
     if 'difficulty' not in genesis.keys():
         genesis['difficulty'] = estimate_difficulty(genesis['intended_mining_time_days'])
+    if 'miner_name' not in genesis.keys():
+        miner_name = sys.argv[2]
+        genesis['miner_name'] = miner_name
     genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
     genesis = {'block_content': genesis.copy()}
     genesis['hash'] = genesis_hash
@@ -185,6 +188,7 @@ if len(sys.argv) == 2:
 # Import the data to validate
 story = import_json(sys.argv[1])
 signed_chapter_data = import_json(sys.argv[2])
+miner_name = sys.argv[3]
 
 # Check that the chapter data is valid.
 genesis = story['0']['block_content']
@@ -200,7 +204,7 @@ mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
 check(mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - dt.datetime.now(tz = pytz.UTC)) + '.')
 
 # Initialise the new block
-new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay)}
+new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay), 'miner_name': miner_name}
 
 # Now perform the actual mining!
 # It takes about (2)**difficulty tries to find a valid nonce. On my computer, it takes about 0.0002 seconds for each try. difficulty = 21 should take about 10 minutes.
@@ -229,5 +233,3 @@ story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
 new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
-    
-Add a miner name field to each block
