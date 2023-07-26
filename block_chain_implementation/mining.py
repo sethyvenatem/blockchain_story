@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 21/07/2023 Steven Mathey
+# 26/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -140,7 +140,7 @@ def estimate_difficulty(days):
     # Use floor to be nice.
     return int(np.floor(np.log(24*3600*days/seconds_to_try_once)/np.log(2)))
 
-def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block):
+def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block):
     # Set the difficulty and mining date of the new block. 'mining_date_previous_block' is given as a timedelta.
     
     mining_date = dt.datetime.now(tz = pytz.UTC)
@@ -149,6 +149,7 @@ def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, min
     grace = 0.25*intended_mining_time
     
     new_block['mining_date'] = dt.datetime.strftime(mining_date, '%Y/%m/%d %H:%M:%S')
+    new_block['story_age_days'] = story_age_previous_block + (mining_date - genesis['mining_date']).total_seconds()/(24*3600)
       
     if mining_date > mining_date_previous_block + mining_delay + intended_mining_time + grace:
         # Too hard, reduce the difficulty.
@@ -200,6 +201,7 @@ previous_block = story[str(signed_chapter_data['chapter_data']['chapter_number']
 
 # Get the mining date of the previous block and check that it is far enough in the past.
 mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
+story_age_previous_block = previous_block['block_content']['story_age_days']
 mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
 check(mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - dt.datetime.now(tz = pytz.UTC)) + '.')
 
@@ -209,7 +211,7 @@ new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': 
 # Now perform the actual mining!
 # It takes about (2)**difficulty tries to find a valid nonce. On my computer, it takes about 0.0002 seconds for each try. difficulty = 21 should take about 10 minutes.
 difficulty = previous_block['block_content']['difficulty']
-new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block)
+new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
 # Set the hash value below which the block hash has to be. Use powers of 2 so that the difficulty is doubled as difficulty increases by 1.
 max_hash = 2**(256-difficulty)-1
 print('Start mining! On my computer, it takes about '+str(time_to_mine_days(difficulty)/24)+' hours to complete.')
@@ -220,7 +222,7 @@ new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64
 new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
 while int.from_bytes(new_hash,'big') > max_hash:
     nb_tries += 1
-    new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block)
+    new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
     new_block['nb_tries'] = nb_tries
     new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
     new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
