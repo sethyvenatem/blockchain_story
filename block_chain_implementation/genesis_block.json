@@ -10,6 +10,7 @@
 	"number_of_chapters": 10,
 	"mining_delay_days": 7,
 	"intended_mining_time_days": 0.01,
-	"mining_date": "2023/07/18 12:00:00",
-	"story_age_days": 0.0
+	"mining_date": "2023/07/20 12:00:00",
+	"story_age_days": 0.0,
+	"miner_name": "steven"
 }

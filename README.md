@@ -2,7 +2,7 @@
 
 This is a blockchain implementation to tell a story. The story is written collaboratively, one chapter at a time and each chapter is validated and appended at the end of the blockchain with a proof of work protocol. Anyone can write the next chapter of the story and share it with the community. If the chapter is popular, then many miners will try to validate it and it will have a high chance of being finalised. This is not an inefficient way to tell a story (even collaboratively), but it it provides a story that can be written in a decentralised way and with a canon that is cryptographically immutable. It's only possible to change the story by writing the next chapters and taking it somewhere interesting. The past can not be changed.
 
-This is a slow blockchain implementation. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually (uploading the submissions and validated story) over a dedicated discord server.
+This is a slow blockchain implementation. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually (uploading the submissions and validated story) over a dedicated discord server (https://discord.gg/5X8MM3Jz).
 
 The repository provides all the tools necessary to write the story: One script to digitally sign the chapter to be validated (chapter_signature.py), one script to validate the chapter and add it to the story (mining.py) and one sript to make sure that any given story has not been tampered with and follows the rules set up at the beginning (check_block.py).
 
@@ -89,22 +89,22 @@ The different blocks are indexed by their 'block_number' field (which is an inte
 - 'mining_date' This is the mining date. It has the restrictions set above and should be the date at which the block was mined. For the genesis block, it can be set freely.
 - 'difficulty' This is the mining difficulty of the next block. It is an integer between 0 and 256. For the genesis block, it can be set freely or be calculated based on the 'intended_mining_time' field and the speed of my computer.
 
-The genesis block (block number 0) has the following special fields:
-- 'story_title'
-- 'chapter_number'
-- 'author'
-- 'character_limits'
-- 'number_of_chapters'
-- 'mining_delay_days'
-- 'intended_mining_time_days'
+The genesis block (block number 0) has the following special fields that are not present in the other blocks:
+- 'story_title' The title of the story is set here. This is a string.
+- 'chapter_number' This is the block number and should be 0.
+- 'author' This is the author of the genesis block. The person who initiates the story. Any string can be used here.
+- 'character_limits' This contains multiple sub-fields restricting the length of the different elements of the story chapters. It can restrict the length of each chapter title, author and text. Any of these fields can also be ommitted to leave more freedom to the authors. The restrictions are specified as integer numbers.
+- 'number_of_chapters' This is an integer denoting the number of chapters that the story can contain.
+- 'mining_delay_days' This is a real number denoting the amount of days after which new blocks can be mined.
+- 'intended_mining_time_days' This is a real number denoting the expected mining time. It is used to dynamically set the difficulty of the mining.
 These can be set freely and used to shape the story.
 
 The other blocks have the following additional fields:
-- signed_chapter_data' Discussed below
-- 'hash_previous_block'
-- 'hash_eth'
-- 'nb_tries'
-- 'nonce'
+- signed_chapter_data' This is discussed below.
+- 'hash_previous_block' This is the hash value of the previous block.
+- 'hash_eth' This is the hash of the first block of the ETH blockchain that comes after the authorised mining date.
+- 'nb_tries' This records the number of nonce values that were tried before an appropriate one was found. This field is there just because it's interesting, but is not used to secure the blockchain. It can be set to any integer.
+- 'nonce' This is the hash that is added to the block and changed until the mining constraints are met.
 
 The chapter submissions are stored in signed chapter data files. The file name pattern is signed_[StoryTitle]_[chapter number]_[ChapterAuthor].json. For example, the first chapter of the above story is stored in signed_TestStory_001_StevenMathey.json and looks like:
 
@@ -124,3 +124,5 @@ The chapter submissions are stored in signed chapter data files. The file name p
 Talk about how line returns are handled.
 
 Decide terminology chapter - block
+
+It does not have to be in english, but this implementation might not work.

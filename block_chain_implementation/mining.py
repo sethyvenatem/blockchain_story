@@ -149,7 +149,7 @@ def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, min
     grace = 0.25*intended_mining_time
     
     new_block['mining_date'] = dt.datetime.strftime(mining_date, '%Y/%m/%d %H:%M:%S')
-    new_block['story_age_days'] = story_age_previous_block + (mining_date - genesis['mining_date']).total_seconds()/(24*3600)
+    new_block['story_age_days'] = story_age_previous_block + (mining_date - pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()/(24*3600)
       
     if mining_date > mining_date_previous_block + mining_delay + intended_mining_time + grace:
         # Too hard, reduce the difficulty.
