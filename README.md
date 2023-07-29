@@ -1,28 +1,34 @@
 # Blockchain Story
 
-This is an implementatio of a blockchain to tell a story. The story is written collaboratively, one chapter at a time and each chapter is validated and appended at the end of the blockchain with a proof of work protocol. Anyone can write the next chapter of the story and share it with the community. If the chapter is popular, then many miners will try to validate it and it will have a high chance of being finalised. This is not an efficient way to tell a story (even collaboratively), but it it provides a story that can be written in a decentralised way and with a canon that is cryptographically immutable. It's only possible to change the story by writing the next chapters and taking it somewhere interesting. The past can not be changed.
+This is an implementatio of a blockchain to tell a story. The story is written collaboratively, one chapter at a time and each chapter is validated and appended at the end of the blockchain with a proof of work protocol. The participants can take (up to) two roles: writer and/or miner. The writers each write their version of the next chapter of the story and share it with the community. Then the miners can pick one of the chapters and try to add it to the blockchain. If the chapter is popular, then many miners will try to validate it and it will have a high chance of being finalised. This is not an efficient way to tell a story (even collaboratively), but it it provides a story that can be written in a decentralised way and with a canon that is cryptographically immutable. It's only possible to change the story by writing the next chapters and taking it somewhere interesting. The past can not be changed. Moreover, it provides an interesting and original way to learn about blockchain technologies.
 
 This is a slow blockchain. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually (uploading the submissions and validated story) over a dedicated discord server, https://discord.gg/5X8MM3Jz.
 
-The repository provides all the tools necessary to write the story: One script to digitally sign the chapter to be validated (chapter_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one sript to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (check_block.py). The third script also creates an easily readable *.txt file with only the story content. The story does not have to be written in english. The encoding is utf8. This implementation was however not tested with special characters.
+In principle, such a blockchain only has to be defined before it can start growing. Anyone can read the rules and definitions and code up their own implementation. The current implementation serves muliptle goals:
+- It is a proof of concept. If it's possible to code, then the rules make sense and can be implemented.
+- It makes it easier for participants to participate. There is no need to code. Just use this implementation.
+- It has teaches all the basics of blockchain technology.
+- It provides a formal and precise definition of the blockchain ant its rules.
+
+The repository provides all the tools necessary to participate in the story-writing: One script to digitally sign the chapter to be validated (chapter_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one script to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (check_block.py). The third script also creates an easily readable *.txt file with only the story content. The story does not have to be written in english. The encoding is utf8. This implementation was however not tested with special characters.
 
 ## Blockchain rules
 
-This blockchain is not about currencies or any type of transactions. Instead it's all about who gets to control the story. The writers are expected to want their contributions to be validated and to be miners themselves. The miners want their favorite submission to be validated. The rules of the blockchain were designed to encourage a fair and fun writing process with this motivation in mind. In particular, a delay is imposed between the validation of any block and the beginning of the mining of the next one. This delay is can change from story to story, but is intended to be about 1 week to give time to the writers to prepare the next submissions after each block is validated.
+This blockchain is not about currencies or any type of transactions. Instead it's all about who gets to control the story. The writers are expected to want their contributions to be validated (and will probably be miners themselves). The miners want their favorite submission to be validated. The rules of the blockchain are designed to encourage a fair and fun writing process with this motivation in mind. In particular, a delay is imposed between the validation of any block and the beginning of the mining of the next one. This delay can change from story to story, but is intended to be about 1 week so that the writers have time to prepare the next submissions after each block is validated.
 
 The details of the rules to add a chapter to the story are inserted in the first block, the genesis block. This block contains the information necessary for 'narrative' as well as 'blockchain' rules.
 
-The 'narrative' rules are:
-- The title of the story is fixed at the beginning and must be repeated correctly in each block.
-- The amount of characters in the chapter title, author name and chapter text is limited.
-- The total amount of chapters in the story is limited.
+- The 'narrative' rules are:
+    - The title of the story is fixed at the beginning and must be repeated correctly in each block.
+    - The amount of characters in the chapter title, author name and chapter text is limited.
+    - The total amount of chapters in the story is limited.
 These narrative rules can be different for every new story. Except for the story title, they are actually even optional. To skip any of them, the user can just ommit the corresponding field in the genesis block. These rules are imposed by first validating the genesis block and then checking each new block against it.
 
-The 'blockchain' rules are:
-- Every block keeps track of its mining date.
-- There is an imposed delay between the mining of two consecutive blocks.
-- Each block contains a difficulty parameter that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2**(256-difficulty)-1. This means that, on average, about 2**difficulty guesses will be necessary to validate a block.
-- The difficulty is adjusted unless the intended mining time is reached. 
+- The 'blockchain' rules are:
+    - Every block keeps track of its mining date.
+    - There is an imposed delay between the mining of two consecutive blocks.
+    - Each block contains a difficulty parameter that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2**(256-difficulty)-1. This means that, on average, about 2**difficulty guesses will be necessary to validate a block.
+    - The difficulty is adjusted unless the intended mining time is reached. 
 These rules are imposed with the use of different systems:
 - Although it is possible for the miner to lie about the mining date, this is restricted and descentivised:
     - The mining date of any given block must be at least later than the mining date of the previous block plus the set delay.
