@@ -16,33 +16,33 @@ The repository provides all the tools necessary to participate in the story-writ
 
 This blockchain is not about currencies or any type of transactions. Instead it's all about who gets to control the story. The writers are expected to want their contributions to be validated (and will probably be miners themselves). The miners want their favorite submission to be validated. The rules of the blockchain are designed to encourage a fair and fun writing process with this motivation in mind. In particular, a delay is imposed between the validation of any block and the beginning of the mining of the next one. This delay can change from story to story, but is intended to be about 1 week so that the writers have time to prepare the next submissions after each block is validated.
 
-The details of the rules to add a chapter to the story are inserted in the first block, the genesis block. This block contains the information necessary for 'narrative' as well as 'blockchain' rules.
+The details of the rules to add a chapter to the story are inserted in the first block, the genesis block. This block contains the information necessary for 'narrative' as well as 'blockchain' rules:
 
 - The 'narrative' rules are:
     - The title of the story is fixed at the beginning and must be repeated correctly in each block.
-    - The amount of characters in the chapter title, author name and chapter text is limited.
-    - The total amount of chapters in the story is limited.
-These narrative rules can be different for every new story. Except for the story title, they are actually even optional. To skip any of them, the user can just ommit the corresponding field in the genesis block. These rules are imposed by first validating the genesis block and then checking each new block against it.
+    - The amount of characters in the chapter title, author name and chapter text can be limited.
+    - The total amount of chapters in the story can be limited.
+These narrative rules can be different for every new story. Except for the story title, they are optional. To skip any of them, the user can just ommit the corresponding field in the genesis block. These rules are imposed by first validating the genesis block and then checking each new block against it.
 
 - The 'blockchain' rules are:
     - Every block keeps track of its mining date.
     - There is an imposed delay between the mining of two consecutive blocks.
-    - Each block contains a difficulty parameter that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2**(256-difficulty)-1. This means that, on average, about 2**difficulty guesses will be necessary to validate a block.
-    - The difficulty is adjusted unless the intended mining time is reached.
+    - Each block contains a difficulty parameter (diff, integer between 0 and 256) that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2**(256-diff)-1. This means that, on average, about 2**diff guesses will be necessary to validate a block.
+    - The difficulty is adjusted (in steps of plus or minus 1) unless the intended mining time is reached.
     
 These rules are imposed with the use of different systems:
 - Although it is possible for the miner to lie about the mining date, this is restricted and descentivised:
     - The mining date of any given block must be at least later than the mining date of the previous block plus the set delay.
-    - It is possible for a miner to write a date in the blockchain that is earlier than the actual mining date. This will enablem them to reduce the intended delay between blocks and start mining the next block faster than expected. This will however also increase the difficulty of the next block and thus make the actual mining longer.
-    - The miners can freely report a mining date that is later than the actual mining date. They however run the risk that another miner validates a block with an earlier mining date. Then this block which will then have finality over their block and they will loose the invested mining work.
-    - The miner is preventef from pre-mining a block (with a reported mining date in the future) before the set delay by the requirement that the hash value of a specific block from the Ethereum blockchain be present in each block (except for the genesis block). The block is defined to be the earliest block following the earliest authorised mining date.
-- The mining time is actually not recorded but is assumed to be the time interval between the current mining date and the sum of the mining date of the previous block, the mining delay and the intended mining time. If this interval is shorter than three quarters of the intended mining time, then the difficulty parameter is decreased by one. If it is longer than five quarters of the intended mining time, then the difficulty is decreased by one. In the other cases, the difficulty parameter is not changed.
+    - It is possible for a miner to write a date in the blockchain that is earlier than the actual mining date. This will enable them to reduce the delay between blocks and start mining the next block faster than expected. This will however also increase the difficulty of the next block and thus make the actual mining longer.
+    - The miners can freely report a mining date that is later than the actual mining date. They however run the risk that another miner validates a block with an earlier mining date. Then this block will then have finality over their block and they will loose the invested mining work.
+    - The miners are prevented from pre-mining a block (with a reported mining date in the future) before the set delay by the requirement that the hash value of a specific block from the Ethereum blockchain be present in each block (except for the genesis block). The block is defined to be the earliest block following the earliest authorised mining date.
+- The mining time is actually not recorded but is assumed to be the time interval between the current mining date and the sum of the mining date of the previous block and the mining delay. If this interval is shorter than three quarters of the intended mining time, then the difficulty parameter is decreased by one. If it is longer than five quarters of the intended mining time, then the difficulty is decreased by one. In the other cases, the difficulty parameter is not changed. With this 'definition' of the mining time, stories with chapters that are not mined immediately become easier to mine and thus attractive to new miners.
 
-In the case of multiple forked stories, the reported mining dates are used to decide which one is final. The bitcoin rule (the story with the largest amount of blocks wins) can not be used here because some stories may have a predefined (and finite) number of chapters. The earliest mining date at the moment of the fork is not enough as well. Someone could rapidly mine one block and keep it secret while they mine the rest of the story as they want. It there are multiple stories sharing the same genesis block, then the longest one has finality. If there are multiple stories with the same number of blocks, then the 'story age' is computed as the sum (over all chapters) of the difference between the mining date and the mining date of the genesis block. The youngest story (with the smallest 'story age') is final.
+In the case of a story with multiple forks, the reported mining dates are used to decide which one is final. The bitcoin rule (the story with the largest amount of blocks wins) can not be used here because some stories may have a predefined (and finite) number of chapters. The earliest mining date at the moment of the fork is not enough as well. Someone could rapidly mine one block and keep it secret while they mine the rest of the story. If there are multiple stories sharing the same genesis block, then the longest one has finality. If there are multiple stories with the same number of blocks, then the 'story age' is computed as the sum (over all chapters) of the difference between the mining date and the mining date of the genesis block. The youngest story (with the smallest 'story age') is final.
 
 ## Description of json files
 
-This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as [StoryTitle]_[largest_block_number].json. For example the first two blocks of test story are stored in TestStory_001.json, which looks like:
+This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as [StoryTitle]_[largest_block_number].json. For example the first two blocks of 'test story' are stored in TestStory_001.json, which looks like:
 
 ```json
 {
@@ -95,28 +95,28 @@ This implementation of a blockchain story is managed with *.json files. The main
 
 The different blocks are indexed by their 'block_number' field (which is an integer represented as a string). Each block has two fields: 'block_content' and 'hash'. The second is the hash of the first. All the hashes are hexadecimal representations of the SHA-256 hash of the string containing the block content. All the blocks have 4 fields in common in their 'block_content' field:
 - 'miner_name' This is the name of the miner and can be any string specified by the miner.
-- 'mining_date' This is the mining date. It has the restrictions set above and should be the date at which the block was mined. For the genesis block, it can be set freely.
+- 'mining_date' This is the mining date (string with format %Y/%m/%d %H:%M:%S'). The date is reported in the UTC time zone and with the seconds rounded to the closest integer. Within the restrictions discussed above, it can be set freely. It should however be the date at which the block was mined. For the genesis block, it can be set entirely freely.
 - 'difficulty' This is the mining difficulty of the next block. It is an integer between 0 and 256. For the genesis block, it can be set freely or be calculated based on the 'intended_mining_time' field and the speed of my computer.
-- 'story_age_days' This is the 'age' of the story up until the corresponding block. It is the sum over all the previous block and including the current block of the difference between the block mining date and the mining date of the genesis block (in days). This field is used to determine finality in the case that multiple branches have the same number of blocks.
+- 'story_age_days' This is the 'age' of the story up until the corresponding block. It is a float. It is the sum of the ages of all previous block (including the current block). The age of each block is the difference between the block mining date and the mining date of the genesis block (in days). This field is used to determine finality in the case that multiple branches have the same number of blocks.
 
-The genesis block (block number 0) has the following special fields that are not present in the other blocks:
+The genesis block (block number '0') has the following special fields that are not present in the other blocks:
 - 'story_title' The title of the story is set here. This is a string.
 - 'chapter_number' This is the block number and should be 0.
-- 'author' This is the author of the genesis block. The person who initiates the story. Any string can be used here.
-- 'character_limits' This contains (at most) 3 sub-fields restricting the length of the different elements of the story's chapters. It can restrict the length of the chapter titles, authors and texts. Any of these fields can also be ommitted to leave more freedom to the authors. The restrictions are specified as integer numbers.
-- 'number_of_chapters' This is an integer denoting the maximum number of chapters that the story can contain. It can be used to write a finite story.
-- 'mining_delay_days' This is a real number denoting the amount of days after which new blocks can be mined.
-- 'intended_mining_time_days' This is a real number denoting the expected mining time (in days). It is used to dynamically set the difficulty of the mining.
-These fields can be set freely before the first chapter is written but can not be modified afterwards. They then shape shape the story to come.
+- 'author' This is the author of the genesis block. The person who initiates the story and chooses the rules. Any string can be used here.
+- 'character_limits' This contains (at most) 3 sub-fields restricting the length of the different elements of the story's chapters. It can restrict the length of the chapter titles, author names and texts. Any of these fields can also be ommitted to leave more freedom to the authors. The restrictions are specified as integer numbers.
+- 'number_of_chapters' This is an integer denoting the maximum number of chapters that the story can contain.
+- 'mining_delay_days' This is a float denoting the amount of days after which new blocks can be mined.
+- 'intended_mining_time_days' This is a float denoting the expected mining time (in days). It is used to dynamically set the difficulty of the mining.
+These fields can be set freely before the first chapter is written but can not be modified afterwards. They shape the story to come.
 
 The other blocks (the actual chapters) have the following additional fields:
-- signed_chapter_data' See below.
+- 'signed_chapter_data' See below.
 - 'hash_previous_block' This is the hash value of the previous block. It ensures that each block is bonded to the previous one.
 - 'hash_eth' This is the hash of the first block of the ETH blockchain that comes after the first authorised mining date. This date is the sum of the mining date of the previous block and the mining delay set in the genesis block.
 - 'nb_tries' This records the number of nonce values that were tried before an appropriate one was found. This field is there just because it's interesting, but is not used to secure the blockchain. It can be set to any integer, but it's nice if the miners report it honestly.
-- 'nonce' This can be any hash value. Different values of the nonceproduce different block hashes and only hash values smaller than the value set by the mining difficulty allow for a block to be validated.
+- 'nonce' This can be any hash value. Different values of the nonce produce different block hashes and only hash values smaller than the value set by the mining difficulty allow for a block to be validated.
 
-The chapter submissions are read from signed chapter data files. The file name pattern is signed_[StoryTitle]_[chapter number]_[ChapterAuthor].json. For example, the first chapter of the above story is stored in signed_TestStory_001_StevenMathey.json and looks like:
+The chapter submissions are read from signed-chapter-data files. The file name pattern is signed_[StoryTitle]_[chapter number]_[ChapterAuthor].json. For example, the first chapter of the above story is stored in signed_TestStory_001_StevenMathey.json and looks like:
 
 ```json
 {
@@ -132,10 +132,10 @@ The chapter submissions are read from signed chapter data files. The file name p
 }
 ```
 These files contain 3 fields:
-- 'chapter_data' This is the actual content of the chapter to validate. It contains 5 sub-fields 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The chapter_number is an integer and all the other fields are strings. The story_title must coincide with the story_title reported in the genesis block. The chapter number must be one plus the largest validated block number. Line returns are included in the text by including the string '\n'. This is handled automatically if the chapter is signed by providing the text as a *.txt file in chapter_signature.py
+- 'chapter_data' This is the actual content of the chapter to validate. It contains 5 sub-fields 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The chapter_number is an integer and all the other fields are strings. The story_title must coincide with the story_title reported in the genesis block. The chapter number must be one plus the largest validated block number. Line returns are included in the text by including the string '\n'. This is handled automatically if the chapter is signed by providing the text as a *.txt file in chapter_signature.py.
 - 'encrypted_hashed_chapter' and 'public_key' provide the digital signature through the rsa protocol. The chapter data is encrypted with the author's private key and the public key is provided to enable the proof that the text has not been changed.
 
+## How to use the three python scripts
 
-Decide terminology chapter - block
 
 use spell checker

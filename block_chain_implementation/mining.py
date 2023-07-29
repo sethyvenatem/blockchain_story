@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 26/07/2023 Steven Mathey
+# 29/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -91,13 +91,13 @@ def get_eth_block_info(target_date, retry = True):
     if target_date.tzinfo is None:
         target_date = pytz.utc.localize(target_date)
 
-    start_time = dt.datetime.now(tz = pytz.UTC)
+    start_time = get_now()
     approx_nb_blocks = int(np.ceil((start_time-target_date).total_seconds()/(12.5)))
     latest_block = w3.eth.get_block('latest').number
     target_block = latest_block - approx_nb_blocks
     block_timestamp = pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
 
-    while (block_timestamp > target_date) & (dt.datetime.now(tz = pytz.UTC) < start_time+dt.timedelta(minutes = 5)):
+    while (block_timestamp > target_date) & (get_now() < start_time+dt.timedelta(minutes = 5)):
         # stop if the function iterates for more than 5 minutes.
         approx_nb_blocks = int(np.ceil((block_timestamp-target_date).total_seconds()/(12.5)))
         target_block = target_block - approx_nb_blocks
@@ -109,7 +109,7 @@ def get_eth_block_info(target_date, retry = True):
         while (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
             target_block += 1
     
-    if ((dt.datetime.now(tz = pytz.UTC) > start_time+dt.timedelta(minutes = 5)) or
+    if ((get_now() > start_time+dt.timedelta(minutes = 5)) or
         (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date) or
         (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block-1).timestamp)) > target_date)):
         # check that the search did not time out, that the target block is after the target date and that the block just before the target block is before the target date.
@@ -143,7 +143,7 @@ def estimate_difficulty(days):
 def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block):
     # Set the difficulty and mining date of the new block. 'mining_date_previous_block' is given as a timedelta.
     
-    mining_date = dt.datetime.now(tz = pytz.UTC)
+    mining_date = get_now()
     mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
     intended_mining_time = dt.timedelta(days = genesis['intended_mining_time_days'])
     grace = 0.25*intended_mining_time
@@ -167,6 +167,15 @@ def check(statement,message):
         print(message)
         sys.exit()
         
+def get_now():
+    # This function constructs a datetime object for right now, UTC time zone and the seconds rounded to the closest integer.
+    
+    now = dt.datetime.now(tz = pytz.UTC)
+    if now.microsecond >= 500000:
+        now = now + dt.timedelta(seconds = 1)
+    
+    return now.replace(microsecond = 0)
+    
 ################################# The program starts here ################################################
 
 if len(sys.argv) <= 3:
@@ -203,7 +212,7 @@ previous_block = story[str(signed_chapter_data['chapter_data']['chapter_number']
 mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
 story_age_previous_block = previous_block['block_content']['story_age_days']
 mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
-check(mining_date_previous_block + mining_delay <= dt.datetime.now(tz = pytz.UTC), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - dt.datetime.now(tz = pytz.UTC)) + '.')
+check(mining_date_previous_block + mining_delay <= get_now(), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - get_now()) + '.')
 
 # Initialise the new block
 new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay), 'miner_name': miner_name}
@@ -227,7 +236,7 @@ while int.from_bytes(new_hash,'big') > max_hash:
     new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
     new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
                            
-try_time = dt.datetime.now(tz = pytz.UTC)-start_time
+try_time = get_now()-start_time
 print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tries,'per try.')
 new_block = {'block_content': new_block.copy()}
 new_block['hash'] = new_hash.hex()
