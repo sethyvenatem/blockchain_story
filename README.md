@@ -28,7 +28,8 @@ These narrative rules can be different for every new story. Except for the story
     - Every block keeps track of its mining date.
     - There is an imposed delay between the mining of two consecutive blocks.
     - Each block contains a difficulty parameter that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2**(256-difficulty)-1. This means that, on average, about 2**difficulty guesses will be necessary to validate a block.
-    - The difficulty is adjusted unless the intended mining time is reached. 
+    - The difficulty is adjusted unless the intended mining time is reached.
+    
 These rules are imposed with the use of different systems:
 - Although it is possible for the miner to lie about the mining date, this is restricted and descentivised:
     - The mining date of any given block must be at least later than the mining date of the previous block plus the set delay.
