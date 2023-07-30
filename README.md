@@ -42,7 +42,7 @@ In the case of a story with multiple forks, the reported mining dates are used t
 
 ## Description of json files
 
-This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as [StoryTitle]_[largest_block_number].json. For example the first two blocks of 'test story' are stored in TestStory_001.json, which looks like:
+This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as [StoryTitle]_[largest_block_number].json. For example the first three blocks of 'test story' are stored in TestStory_002.json, which looks like:
 
 ```json
 {
@@ -57,14 +57,14 @@ This implementation of a blockchain story is managed with *.json files. The main
 				"text": 30000
 			},
 			"number_of_chapters": 10,
-			"mining_delay_days": 7,
-			"intended_mining_time_days": 0.01,
-			"mining_date": "2023/07/20 12:00:00",
+			"mining_delay_days": 1,
+			"intended_mining_time_days": 0.1,
+			"mining_date": "2023/07/28 12:00:00",
 			"story_age_days": 0.0,
 			"miner_name": "steven",
-			"difficulty": 22
+			"difficulty": 25
 		},
-		"hash": "d3c275e7c25651fe9f9203d1ae9c22265c21aec6cd9a682df7373ea6faf7b0b2"
+		"hash": "4b0d755a24526680644b4529701811f9d639c9109a6f4c466b55f18985b9f8d9"
 	},
 	"1": {
 		"block_content": {
@@ -79,16 +79,40 @@ This implementation of a blockchain story is managed with *.json files. The main
 				"encrypted_hashed_chapter": "2aca7d50ca560a16d55c3426e3f39046fae76c0d4a4134f88daaa212146156dc879ddf238d23748f385ad0db7ccf0d58212a6b7617a6712d1f8d7605c84d843d9f55c3f36543fa70a0b03eeed4b2c6e127c72ac7549ac4fb7db31fe2fdd96e7d5f2b9ec3aea50ed6acdf078c62b1fc88e4332b5a837feae7ecad4941593ba273",
 				"public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f4742414948712b704553584a4c7a6c2f51304946535a2f5a653854694a4d364b496156344d474b5378387459756c536b4457796a4f32785730480a707547502b48666e5a6455615478597471316d3074445039423236304c69715a59564b4d4e314e57347549477536426e586768434c32706f5170373173646c4d0a4c4a5434463853516c6e537a59733557364e6436547267316873316978704267376c4264355270714f2b385057344d785965736841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
 			},
-			"hash_previous_block": "d3c275e7c25651fe9f9203d1ae9c22265c21aec6cd9a682df7373ea6faf7b0b2",
-			"hash_eth": "0x099580cbcee5ac8ae130b75b73060e23953298533d0962340bb78be68d596ff3",
+			"hash_previous_block": "4b0d755a24526680644b4529701811f9d639c9109a6f4c466b55f18985b9f8d9",
+			"hash_eth": "0xcd22ced2a7481ba31662c787b15ae9f26bc6236a73e247b3b3bf1daea8e31d4d",
 			"miner_name": "sethyvenatem",
-			"mining_date": "2023/07/27 21:00:15",
-			"story_age_days": 7.375175638460648,
-			"difficulty": 21,
-			"nb_tries": 1146437,
-			"nonce": "240446d36aabac74238fc456d3f6a393d2626fae5324ee96c0aa876d64972d53"
+			"mining_date": "2023/07/29 14:44:53",
+			"story_age_days": 1.1145023148148148,
+			"difficulty": 25,
+			"nb_tries": 28424943,
+			"nonce": "9135f33a83379aaa48fffc27ceeb6742acf543c98d52fd0384e413f6830c96a4"
 		},
-		"hash": "0000011c6c8e8d139a83a9f1dfbd57b38dfa389db2922b1d635e813c6286a2ac"
+		"hash": "00000003fd465797b5b750f45af4410b31be49e456c25f9bf53cfa546aa1c231"
+	},
+	"2": {
+		"block_content": {
+			"signed_chapter_data": {
+				"chapter_data": {
+					"story_title": "test story",
+					"chapter_number": 2,
+					"author": "sethyvenatem",
+					"chapter_title": "second chapter",
+					"text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus."
+				},
+				"encrypted_hashed_chapter": "55c5a7f8a8fb9eafadf9babfc5dced7d3eb9dfcaee39e437e68fd2232d9c65ae558ef552b91c3a51982d41dd6f7c1565aaaec2bba3a4666c4b7a8e75e167624f1cdf668ad78c5725939d67a05602450d614f5707641ceccfe494c33367e43acf040ac00a9a6d04698b2a52e7071d5e803834729ab1486cf73bd5eeb815e7178f",
+				"public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f4742414e4b3069786a714e507a416b74477962586a312f687674504d376b574e774e6e6e39696c4f764871376e4b415464646449432b6f576a530a362f6a68465a366371394f3863546f443534417074627447677a536f6354486d4c546949717553534f636e2b6c666d5261667733346f71476a304a56776937590a38576f415050667462316337594375793275597a55704b4a6a6869555855335968525668723039584643616e355a636e4b34357441674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
+			},
+			"hash_previous_block": "00000003fd465797b5b750f45af4410b31be49e456c25f9bf53cfa546aa1c231",
+			"hash_eth": "0x5c38f160923567d8030c9e79aea9e6613dbe02c13043bc6165a6e836cf7a5980",
+			"miner_name": "sethyvenatem",
+			"mining_date": "2023/07/30 15:29:06",
+			"story_age_days": 3.2597106481481477,
+			"difficulty": 26,
+			"nb_tries": 22987939,
+			"nonce": "44572d2ec9f95bad316c410ab2b897fac0bdebf3e851f99923a5510360050410"
+		},
+		"hash": "00000050e854dbf5225eb14447cd6b0bba5335ad33bf2f22dd926c26cb2bf0f5"
 	}
 }
 ```
@@ -139,7 +163,7 @@ These files contain 3 fields:
 
 The details on how the three python scripts work are in the scripts as comments. Here are instructions on how to use them:
 
-# chapter_signature.py
+### chapter_signature.py
 
 This script performs a digital signature on any given chapter. This is done with the [rsa cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)). A new pair of private and public keys are generated when the script is run. The private key is used to encrypt the (hash of) the chapter data and both the encrypted hash and the public key are provided together with the chapter data. The public key can be used to decrypt the data and check that it is the same as the clear data. This test proves that the chapter data has not been modified because only the holder of the corresponding private key can produce such an encryption.
 
@@ -152,6 +176,11 @@ The script creates 3 files in the working directory:
 - a *.json file with the private and public keys
 - a *.txt file with the chapter data displayed in an easily readable way.
 
-# mining.py
+### mining.py
+
+
+### check_block.py
+
+todo...
 
 use spell checker
