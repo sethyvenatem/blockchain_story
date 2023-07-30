@@ -8,10 +8,10 @@
 #
 #The chapter data can be provided in two ways:
 #    - Place it in a json file, put the file in the same directory as the script and call the script with the name of the file as argument. The json file must have the following fields: 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The 'chapter_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
-#    - Call the script with no argument. Then the script prompts the user for the necessary information.
+#    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 21/07/2023 Steven Mathey
+# 30/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json

@@ -137,5 +137,21 @@ These files contain 3 fields:
 
 ## How to use the three python scripts
 
+The details on how the three python scripts work are in the scripts as comments. Here are instructions on how to use them:
+
+# chapter_signature.py
+
+This script performs a digital signature on any given chapter. This is done with the [rsa cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)). A new pair of private and public keys are generated when the script is run. The private key is used to encrypt the (hash of) the chapter data and both the encrypted hash and the public key are provided together with the chapter data. The public key can be used to decrypt the data and check that it is the same as the clear data. This test proves that the chapter data has not been modified because only the holder of the corresponding private key can produce such an encryption.
+
+The chapter data can be provided in two ways:
+- Place it in a json file, put the file in the same directory as the script and call the script with the name of the file as argument. The json file must have the following fields: 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The 'chapter_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
+- Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
+
+The script creates 3 files in the working directory:
+- the signed chapter data.
+- a *.json file with the private and public keys
+- a *.txt file with the chapter data displayed in an easily readable way.
+
+# mining.py
 
 use spell checker

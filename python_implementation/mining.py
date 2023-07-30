@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 29/07/2023 Steven Mathey
+# 30/07/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -131,7 +131,7 @@ def get_eth_block_info(target_date, retry = True):
 
 def time_to_mine_days(difficulty):
     # This function estimates the time to solve the mining problem as a function of the difficulty (in days).
-    seconds_to_try_once = 0.0002    
+    seconds_to_try_once = 0.0001
     return seconds_to_try_once*(2**difficulty)/(24*3600)
 
 def estimate_difficulty(days):
@@ -169,6 +169,7 @@ def check(statement,message):
         
 def get_now():
     # This function constructs a datetime object for right now, UTC time zone and the seconds rounded to the closest integer.
+    # Thanks stack overflow: https://stackoverflow.com/questions/47792242/rounding-time-off-to-the-nearest-second-python
     
     now = dt.datetime.now(tz = pytz.UTC)
     if now.microsecond >= 500000:
@@ -178,8 +179,9 @@ def get_now():
     
 ################################# The program starts here ################################################
 
-if len(sys.argv) <= 3:
+if len(sys.argv) == 3:
     # The input is the genesis block without its hash value.
+    print('2 arguments provided, this validates the genesis block.')
     genesis = import_json(sys.argv[1])
     check('intended_mining_time_days' in genesis.keys(), 'The provided file is not a valid genesis block.')
     if 'difficulty' not in genesis.keys():
@@ -194,7 +196,9 @@ if len(sys.argv) <= 3:
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps({'0': genesis}))
     sys.exit()
-    
+
+check(len(sys.argv) == 4, str(len(sys.argv)-1)+' arguments provided. This is wrong.')
+
 # Import the data to validate
 story = import_json(sys.argv[1])
 signed_chapter_data = import_json(sys.argv[2])
