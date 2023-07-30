@@ -42,7 +42,7 @@ In the case of a story with multiple forks, the reported mining dates are used t
 
 ## Description of json files
 
-This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as [StoryTitle]_[largest_block_number].json. For example the first three blocks of 'test story' are stored in TestStory_002.json, which looks like:
+This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as \[StoryTitle\]\_\[largest_block_number\].json. For example the first three blocks of 'test story' are stored in TestStory_002.json, which looks like:
 
 ```json
 {
