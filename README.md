@@ -2,7 +2,7 @@
 
 This is an implementatio of a blockchain to tell a story. The story is written collaboratively, one chapter at a time and each chapter is validated and appended at the end of the blockchain with a proof of work protocol. The participants can take (up to) two roles: writer and/or miner. The writers each write their version of the next chapter of the story and share it with the community. Then the miners can pick one of the chapters and try to add it to the blockchain. If the chapter is popular, then many miners will try to validate it and it will have a high chance of being finalised. This is not an efficient way to tell a story (even collaboratively), but it it provides a story that can be written in a decentralised way and with a canon that is cryptographically immutable. It's only possible to change the story by writing the next chapters and taking it somewhere interesting. The past can not be changed. Moreover, it provides an interesting and original way to learn about blockchain technologies.
 
-This is a slow blockchain. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually (uploading the submissions and validated story) over a dedicated discord server, https://discord.gg/5X8MM3Jz.
+This is a slow blockchain. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually (uploading the submissions and validated story) over a dedicated discord server: https://discord.gg/5X8MM3Jz.
 
 In principle, such a blockchain only has to be defined before it can start growing. Anyone can read the rules and definitions and code up their own implementation. The current implementation serves muliptle goals:
 - It is a proof of concept. If it's possible to code, then the rules make sense and can be implemented.
@@ -140,7 +140,7 @@ The other blocks (the actual chapters) have the following additional fields:
 - 'nb_tries' This records the number of nonce values that were tried before an appropriate one was found. This field is there just because it's interesting, but is not used to secure the blockchain. It can be set to any integer, but it's nice if the miners report it honestly.
 - 'nonce' This can be any hash value. Different values of the nonce produce different block hashes and only hash values smaller than the value set by the mining difficulty allow for a block to be validated.
 
-The chapter submissions are read from signed-chapter-data files. The file name pattern is signed_[StoryTitle]_[chapter number]_[ChapterAuthor].json. For example, the first chapter of the above story is stored in signed_TestStory_001_StevenMathey.json and looks like:
+The chapter submissions are read from signed-chapter-data files. The file name pattern is signed\_\[StoryTitle\]\_\[chapter number\]\_\[ChapterAuthor\].json. For example, the first chapter of the above story is stored in signed_TestStory_001_StevenMathey.json and looks like:
 
 ```json
 {
