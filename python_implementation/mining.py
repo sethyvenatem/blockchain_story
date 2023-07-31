@@ -1,12 +1,12 @@
 # -----------------------------------------------------------
 # Perform the mining and generate finished block
 #
-#This script validates and adds one block to the existing story. If it is run with two arguments it
+# This script validates and adds one block to the existing story. If it is run with two arguments it
 #    - Imports the genesis block. The file name is the first argument and the file is placed in the working directory.
 #    - Estimate the difficulty of the mining of the first block.
 #    - Computes the hash of the genesis block.
 #    - Save it ['story_title'].title().replace(' ','')+'_000.json' (in the working directory) as the story with the first validated block
-#If it is run with three arguments then it:
+# If it is run with three arguments then it:
 #    - Imports the up-until-now-validated story. The file name is the first argument and the file is placed in the working directory.
 #    - Imports the signed chapter to validate. The file name is the second argument and the file is placed in the working directory.
 #    - It performs as many checks as possible in order to avoid un-necessary mining. It checks that
