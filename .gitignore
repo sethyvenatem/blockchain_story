@@ -3,6 +3,8 @@
 *.json
 *.pdf
 *.txt
+*.png
 just_in_case.py
 work.ipynb
 !genesis_block.json
+notes.rtf
