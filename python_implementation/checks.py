@@ -90,6 +90,17 @@ def check(statement,message):
         print(message)
         sys.exit()
 
+def write_chapter_to_readable_file(chapter_data):
+    # This makes a readable text file with all the data provided by the author.
+    
+    to_write = [(k.replace('_',' ')+':').title() + ' ' + str(chapter_data[k])+'\n\n' for k in chapter_data.keys() if k!='text']
+    to_write.append('\n\n\n' + chapter_data['text'])
+    
+    file_name = (chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.txt')
+    
+    with open(file_name, "w") as outfile:
+        outfile.writelines(to_write)
+        
 ################################# The program starts here ################################################
 
 # The name of the file to check is provided as argument
@@ -101,10 +112,12 @@ if set(['story_title', 'chapter_number', 'author', 'chapter_title', 'text']) == 
     genesis = get_genesis_block(data['story_title'])
     if len(genesis) == 0:
         print('You are checking and unsigend chapter and there is no genesis block available. No check is performed.')
+        write_chapter_to_readable_file(data)
         sys.exit(0)
 
     check(check_chapter_data(data, genesis),'The chapter data does not comply with the rules of this story.')
     print('The submitted unsigned chapter data follows the rules of the story.')
+    write_chapter_to_readable_file(data)
     sys.exit(0)
     
 elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(data.keys()):
@@ -115,6 +128,7 @@ elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(data
     print('The submitted signed chapter data:')
     print('    - follows the rules of the story.')
     print('    - is signed correctly.')
+    write_chapter_to_readable_file(data['chapter_data'])
     sys.exit(0)
     
 elif set(['block_content', 'hash']) == set(data.keys()):
@@ -124,45 +138,37 @@ elif set(['block_content', 'hash']) == set(data.keys()):
     data = data['block_content']
     if 'character_limits' in data.keys():
         # genesis block
-        check((data['story_age_days'] == 0.0) and (data['chapter_number'] == 0), 'The chapter number or the story age are not zero.')
+        check(data['chapter_number'] == 0, 'The chapter number is not zero.')
+        check(data['story_age_days'] == 0.0, 'The story age is not zero.')
         print('The provided genesis block has:')
         print('    - a consistent hash value.')
         print('    - consistent \'chapter_number\' and \'story_age_days\' fields.')
+        sys.exit(0)
         
     elif 'signed_chapter_data' in data.keys():
         # normal block
+        genesis = get_genesis_block(data['signed_chapter_data']['chapter_data']['story_title'])
+        check(validate_chapter_data(data['signed_chapter_data'], genesis), 'The signed chapter data does not comply with the rules of this story.')
+        print('The provided isolated block has:')
+        print('    - a consistent hash value.')
+        if len(genesis) > 0:
+            print('    - \'chapter_data\' that is consistent with the genesis bock.')
+        print('    - consistently signed \'chapter_data\'.')
+        write_chapter_to_readable_file(data['signed_chapter_data']['chapter_data'])
+        sys.exit()
         
 elif all([x.isdigit() for x in data.keys()]):
     # full story
     
+    # genesis block
+    genesis = data['0']
+    check(check_hash(genesis['hash'], genesis['block_content']), 'The hash value of the genesis block does not match its data.')
+    genesis = genesis['block_content']
+    check(genesis['chapter_number'] == 0, 'The chapter number is not zero in the genesis block.')
+    check(genesis['story_age_days'] == 0.0, 'The story age is not zero in the genesis block.')
     
-#genesis_fields = ['story_title', 'chapter_number', 'author', 'character_limits', 'number_of_chapters', 'mining_delay_days', 'intended_mining_time_days', 'mining_date', 'story_age_days', 'miner_name', 'difficulty']
-#block_fields = ['signed_chapter_data', 'hash_previous_block' 'hash_eth', 'miner_name', 'mining_date', 'story_age_days', 'difficulty', 'nb_tries', 'nonce']
-
-Use file name as input.
-
-From file_name, load json and look at keys.
-
-Go from simle to complex:
-    - if keys of chapter_data, check
-    - if keys of signed_chapter_data, check
-    ..
-
-Import block
-Local checks:
-    - Compute hash of everything and check that it matches block hash
-    - Compute hash of author data and compare to decrypted hash
-    - check the number of characters in the author data different fields
-previous block check
-    - check that the block number is one more than the previous block
-    - check that mining date is more than 1 week after previous block mining date
-    - check that the previous block hash is right
-Comparison to ETH
-    - check that the eth hash is the right one.
-    
-Make readable pdf from:
-    - chapter data
-    - secure chapter data
-    - validated block (isolated)
-    - full story
-In all cases, check as much as possible
+    for block_number in range(1,len(data)):
+        block = data[str(block_number)]
+        
+        
+        

@@ -171,7 +171,7 @@ The chapter data can be provided in two ways:
 - Place it in a json file, put the file in the same directory as the script and call the script with the name of the file as argument. The json file must have the following fields: 'story_title', 'chapter_number', 'author', 'chapter_title' and 'text'. The 'chapter_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
 - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 
-If possible, the script checks that the chapter data to sign is consistent with the genesis block. It first looks through the working directory and uses the genesis block of the longest validated story or from a file called 'genesis_block.json' if there is no validated story with the right title available. If neither are available, then the test is skipped.
+If possible, the script checks that the chapter data to sign is consistent with the genesis block. It looks through the working directory and uses the genesis block of the longest validated story if there is one. If not, it looks for a file called 'genesis_block.json'. If neither are available, then the test is skipped.
 
 The script creates 3 files in the working directory:
 - the signed chapter data.
