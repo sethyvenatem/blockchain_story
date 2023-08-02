@@ -13,8 +13,9 @@ import sys
 from web3 import Web3, AsyncWeb3
 import pytz
 import numpy as np
+import glob
 
-def import_json(file_name):
+def import_json(file_name, stop_if_fail = True):
     
     if file_name[-5:].lower() != '.json':
         sys.exit('The file name ('+file_name+') must end with \'.json\'.')
@@ -22,7 +23,12 @@ def import_json(file_name):
     try:
         return json.load(open(file_name))
     except:
-        sys.exit('Could not find '+file_name+'.')
+        if stop_if_fail:
+            print('Could not find '+file_name+'.')
+            sys.exit(0)
+        else:
+            print('Could not find '+file_name+'.')
+            return {}
         
 def check_chapter_data(chapter_data, genesis):
     # This checks that the chapter to submit does not violate the rules given in the genesis block.
@@ -81,7 +87,7 @@ def get_genesis_block(story_title):
     blockchain = import_json(file_name, False)
     
     if check_hash(blockchain['0']['hash'],blockchain['0']['block_content']):
-        return genesis
+        return blockchain['0']['block_content']
     
     sys.exit('The genesis block from this file has been tampered with. Don\'t use it.')
     
@@ -170,7 +176,7 @@ def get_difficulty(genesis, block, previous_block):
 ################################# The program starts here ################################################
 
 # The name of the file to check is provided as argument
-data = import_json(sys.argv[2])
+data = import_json(sys.argv[1])
 
 if set(['story_title', 'chapter_number', 'author', 'chapter_title', 'text']) == set(data.keys()):
     # Unsigned chapter data
