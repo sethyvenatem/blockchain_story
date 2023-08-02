@@ -124,7 +124,7 @@ The different blocks are indexed by their 'block\_number' field (which is an int
 - 'miner\_name' This is the name of the miner and can be any string specified by the miner.
 - 'mining\_date' This is the mining date (string with format %Y/%m/%d %H:%M:%S). The date is reported in the UTC time zone and with the seconds rounded to the closest integer. Within the restrictions discussed above, it can be set freely. It should however be the date at which the block was mined. For the genesis block, it can be set entirely freely.
 - 'difficulty' This is the mining difficulty of the next block. It is an integer between 0 and 256. For the genesis block, it can be set freely or be calculated based on the 'intended\_mining\_time' field and the speed of my computer.
-- 'story\_age\_days' This is the 'age' of the story up until the corresponding block. It is a float. It is the sum of the ages of all previous block (including the current block). The age of each block is the difference between the block mining date and the mining date of the genesis block (in days). This field is used to determine finality in the case that multiple branches have the same number of blocks.
+- 'story\_age\_days' This is the 'age' of the story up until the corresponding block. It is an integer. It is the sum of the ages of all previous block (including the current block). The age of each block is the difference between the block mining date and the mining date of the genesis block rounded to the closest second. This field is used to determine finality in the case that multiple branches have the same number of blocks.
 
 The genesis block (block '0') has the following special fields that are not present in the other blocks:
 

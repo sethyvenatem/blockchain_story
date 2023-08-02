@@ -255,7 +255,7 @@ elif all([x.isdigit() for x in data.keys()]):
         
         check(get_eth_block_info(earliest_mining_date) == block['hash_eth'], 'The \'hash_eth\' field of block '+str(block_number)+' does not match the right ETH block.')
         
-        check(previous_block['story_age'] + pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S')) == dt.timedelta(days = block['story_age_days']), 'The story age of block '+str(block_number)+' is not calculated correctly.')
+        check(previous_block['story_age'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == dt.timedelta(days = block['story_age_days']), 'The story age of block '+str(block_number)+' is not calculated correctly.')
         
         check(get_difficulty(genesis, block, previous_block) == block['difficulty'], 'The difficulty of block '+str(block_number)+' was not calculated correctly.')
         
