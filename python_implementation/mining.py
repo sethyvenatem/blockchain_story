@@ -163,6 +163,8 @@ def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, min
     return new_block
 
 def check(statement,message):
+    # This function works like the assert statement, but does not raise an error. It just prints a message and terminates the script.
+    
     if not(statement):
         print(message)
         sys.exit()

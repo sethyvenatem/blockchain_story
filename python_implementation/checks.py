@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 01/08/2023 Steven Mathey
+# 02/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -86,6 +86,8 @@ def get_genesis_block(story_title):
     sys.exit('The genesis block from this file has been tampered with. Don\'t use it.')
     
 def check(statement,message):
+    # This function works like the assert statement, but does not raise an error. It just prints a message and terminates the script.
+    
     if not(statement):
         print(message)
         sys.exit()
@@ -101,6 +103,70 @@ def write_chapter_to_readable_file(chapter_data):
     with open(file_name, "w") as outfile:
         outfile.writelines(to_write)
         
+def get_eth_block_info(target_date, retry = True):
+    # This finds the right block from the ETH blockchain and returns its hash value.
+    # The block is the first block that comes after the target_date.
+    # The algorithm starts from the current block and makes a conservative guess to jump to another block in the past. Then it uses the timestamp of the obtained block as a new current date. It repeates this until the obtained block timestamp is before the target_date. The corresponding block should be just before the target block.
+    # This works fine, but can fail if one block is missing (time interval betwen block is more than 12 seconds) close to the target block. In that case, the obtained block is to far in the past. Then, the block number is increased one-by-one until the block timestamp passed again.
+    # The search terminates if it lasts more than 10 minutes.
+    
+    api = 'https://eth-mainnet.public.blastapi.io'
+    w3 = Web3(Web3.HTTPProvider(api))
+    if target_date.tzinfo is None:
+        target_date = pytz.utc.localize(target_date)
+
+    start_time = get_now()
+    approx_nb_blocks = int(np.ceil((start_time-target_date).total_seconds()/(12.5)))
+    latest_block = w3.eth.get_block('latest').number
+    target_block = latest_block - approx_nb_blocks
+    block_timestamp = pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
+
+    while (block_timestamp > target_date) & (get_now() < start_time+dt.timedelta(minutes = 5)):
+        # stop if the function iterates for more than 5 minutes.
+        approx_nb_blocks = int(np.ceil((block_timestamp-target_date).total_seconds()/(12.5)))
+        target_block = target_block - approx_nb_blocks
+        block_timestamp = pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp))
+    target_block += 1
+    
+    if (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
+        # If we overshoot, come back one block at a time. This should only happen when a block is missing close to the target time.
+        while (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date):
+            target_block += 1
+    
+    if ((get_now() > start_time+dt.timedelta(minutes = 5)) or
+        (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block).timestamp)) < target_date) or
+        (pytz.utc.localize(dt.datetime.utcfromtimestamp(w3.eth.get_block(target_block-1).timestamp)) > target_date)):
+        # check that the search did not time out, that the target block is after the target date and that the block just before the target block is before the target date.
+        # If this is not the case, try once more.
+        if retry:
+            # Try a second time in case that it's a network problem.
+            target_block = get_eth_block_info(target_date, False)
+            if target_block is None:
+                return None
+        else:
+            print('Could not find ETH block.')
+            sys.exit(0)
+        
+    if w3.eth.get_block('finalized').number < target_block:
+        # If the obtained block number is larger than the last finalised block number, then warn the user.
+        print('The ETH block is not finalised yet. Wait about 15 minutes to be sure to mine effectively.')
+        
+    return w3.eth.get_block(target_block).hash.hex()
+        
+def get_difficulty(genesis, block, previous_block):
+
+    mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
+    intended_mining_time = dt.timedelta(days = genesis['intended_mining_time_days'])
+    grace = 0.25*intended_mining_time
+    mining_date = pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))
+    previous_mining_date = pytz.utc.localize(dt.datetime.strptime(previous_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
+
+    if mining_date > previous_mining_date + mining_delay + intended_mining_time + grace:
+        return previous_block['difficulty'] - 1
+    elif block['mining_date'] < previous_mining_date + mining_delay + intended_mining_time + grace:
+        return previous_block['difficulty'] + 1
+    return previous_block['difficulty']
+
 ################################# The program starts here ################################################
 
 # The name of the file to check is provided as argument
@@ -167,8 +233,58 @@ elif all([x.isdigit() for x in data.keys()]):
     check(genesis['chapter_number'] == 0, 'The chapter number is not zero in the genesis block.')
     check(genesis['story_age_days'] == 0.0, 'The story age is not zero in the genesis block.')
     
+    to_write = ''
     for block_number in range(1,len(data)):
+        # Chapter blocks
+        
         block = data[str(block_number)]
+        previous_block = data[str(block_number-1)]
         
+        check(check_hash(block['hash'], block['block_content']), 'The hash value of block '+str(block_number)+' does not match its data.')
         
+        max_hash = 2**(256-previous_block['block_content']['difficulty'])-1
+        check(int.from_bytes(block['hash'],'big') >= max_hash, 'The hash value of block '+str(block_number)+' is not consistent with the difficulty setting.')
         
+        check(block['block_content']['hash_previous_block'] == previous_block['hash'], 'The hash of block '+str(block_number-1)+' does not match the \'hash_previous_block\' field of block '+str(block_number)+'.')
+        
+        block = block['block_content']
+        previous_block = previous_block['block_content']
+        
+        earliest_mining_date = pytz.utc.localize(dt.datetime.strptime(previous_block['mining_date'], '%Y/%m/%d %H:%M:%S')) + dt.timedelta(days = genesis['mining_delay_days'])
+        check(earliest_mining_date <= pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S')), 'The mining date of block '+str(block_number)+' is not consistent with the set mining delay.')
+        
+        check(get_eth_block_info(earliest_mining_date) == block['hash_eth'], 'The \'hash_eth\' field of block '+str(block_number)+' does not match the right ETH block.')
+        
+        check(previous_block['story_age'] + pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S')) == dt.timedelta(days = block['story_age_days']), 'The story age of block '+str(block_number)+' is not calculated correctly.')
+        
+        check(get_difficulty(genesis, block, previous_block) == block['difficulty'], 'The difficulty of block '+str(block_number)+' was not calculated correctly.')
+        
+        block = block['signed_chapter_data']
+        
+        check(validate_chapter_data(block, genesis), 'The signed chapter data of block '+str(block_number)+' does not comply with the rules of this story.')
+        
+        check(block['story_title'] == genesis['story_title'], 'The chapter title of block '+str(block_number)+' does not match the title in the genesis block.')
+        
+        check(block['chapter_number'] == block_number, 'The chapter number of block '+str(block_number)+' is not '+str(block_number)+'.')
+        
+        block = block['chapter_data']
+        to_write.append([(k.replace('_',' ')+':').title() + ' ' + str(block[k])+'\n\n' for k in block.keys() if (k!='text') and (k!='story_title')])
+        to_write.append('\n\n\n' + block['text'] + '\n\n\n\n\n\n')
+        
+    
+    print('Each block of the provided story has has:')
+    print('    - consistent hash values.')
+    print('    - consistent chapter numbering.')
+    print('    - consistent \'story_age\' fields.')
+    print('    - the hash value of the right ETH block.')
+    print('    - a \'signed_chapter_data\' field with a consistent digital signature.')
+    print('    - a \'chapter_data\' that is consistent with the genesis bock.')
+    print()
+    print('The blocks are correctly linked to each other:')
+    print('    - Each block correctly references the hash of the previous block.')
+    print('    - All the reported \'mining_date\' fields are consistent.')
+    print('    - Each block hash value conform to the difficulty set by the previous block.')
+    
+    file_name = (genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt')
+    with open(file_name, "w") as outfile:
+        outfile.writelines(to_write)

@@ -1,4 +1,3 @@
-# -----------------------------------------------------------
 # This script does the following:
 #    - It checks that the provided chapter data is consistent with the rules set in the genesis block. The genesis block is taken from the validated story if available and from 'genesis_block.json' if not. The files must be placed in the local directory.
 #    - It assembles the chapter and associated data is a way that ensures that the text can not be changed (with rsa).
@@ -104,6 +103,8 @@ def write_keys_to_file(public_key,private_key):
         outfile.write(json.dumps(keys))
 
 def check(statement,message):
+    # This function works like the assert statement, but does not raise an error. It just prints a message and terminates the script.
+    
     if not(statement):
         print(message)
         sys.exit()
