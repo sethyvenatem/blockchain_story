@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 02/08/2023 Steven Mathey
+# 03/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -173,6 +173,16 @@ def get_difficulty(genesis, block, previous_block):
         return previous_block['difficulty'] + 1
     return previous_block['difficulty']
 
+def get_now():
+    # This function constructs a datetime object for right now, UTC time zone and the seconds rounded to the closest integer.
+    # Thanks stack overflow: https://stackoverflow.com/questions/47792242/rounding-time-off-to-the-nearest-second-python
+    
+    now = dt.datetime.now(tz = pytz.UTC)
+    if now.microsecond >= 500000:
+        now = now + dt.timedelta(seconds = 1)
+    
+    return now.replace(microsecond = 0)
+
 ################################# The program starts here ################################################
 
 # The name of the file to check is provided as argument
@@ -211,10 +221,10 @@ elif set(['block_content', 'hash']) == set(data.keys()):
     if 'character_limits' in data.keys():
         # genesis block
         check(data['chapter_number'] == 0, 'The chapter number is not zero.')
-        check(data['story_age_days'] == 0.0, 'The story age is not zero.')
+        check(data['story_age_seconds'] == 0.0, 'The story age is not zero.')
         print('The provided genesis block has:')
         print('    - a consistent hash value.')
-        print('    - consistent \'chapter_number\' and \'story_age_days\' fields.')
+        print('    - consistent \'chapter_number\' and \'story_age_seconds\' fields.')
         sys.exit(0)
         
     elif 'signed_chapter_data' in data.keys():
@@ -237,9 +247,10 @@ elif all([x.isdigit() for x in data.keys()]):
     check(check_hash(genesis['hash'], genesis['block_content']), 'The hash value of the genesis block does not match its data.')
     genesis = genesis['block_content']
     check(genesis['chapter_number'] == 0, 'The chapter number is not zero in the genesis block.')
-    check(genesis['story_age_days'] == 0.0, 'The story age is not zero in the genesis block.')
+    check(genesis['story_age_seconds'] == 0.0, 'The story age is not zero in the genesis block.')
     
     to_write = ''
+    block_number = 0
     for block_number in range(1,len(data)):
         # Chapter blocks
         
@@ -249,7 +260,7 @@ elif all([x.isdigit() for x in data.keys()]):
         check(check_hash(block['hash'], block['block_content']), 'The hash value of block '+str(block_number)+' does not match its data.')
         
         max_hash = 2**(256-previous_block['block_content']['difficulty'])-1
-        check(int.from_bytes(block['hash'],'big') >= max_hash, 'The hash value of block '+str(block_number)+' is not consistent with the difficulty setting.')
+        check(int.from_bytes(bytes.fromhex(block['hash']),'big') <= max_hash, 'The hash value of block '+str(block_number)+' is not consistent with the difficulty setting.')
         
         check(block['block_content']['hash_previous_block'] == previous_block['hash'], 'The hash of block '+str(block_number-1)+' does not match the \'hash_previous_block\' field of block '+str(block_number)+'.')
         
@@ -261,7 +272,7 @@ elif all([x.isdigit() for x in data.keys()]):
         
         check(get_eth_block_info(earliest_mining_date) == block['hash_eth'], 'The \'hash_eth\' field of block '+str(block_number)+' does not match the right ETH block.')
         
-        check(previous_block['story_age'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == dt.timedelta(days = block['story_age_days']), 'The story age of block '+str(block_number)+' is not calculated correctly.')
+        check(previous_block['story_age_seconds'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == dt.timedelta(days = block['story_age_seconds']), 'The story age of block '+str(block_number)+' is not calculated correctly.')
         
         check(get_difficulty(genesis, block, previous_block) == block['difficulty'], 'The difficulty of block '+str(block_number)+' was not calculated correctly.')
         
@@ -276,21 +287,28 @@ elif all([x.isdigit() for x in data.keys()]):
         block = block['chapter_data']
         to_write.append([(k.replace('_',' ')+':').title() + ' ' + str(block[k])+'\n\n' for k in block.keys() if (k!='text') and (k!='story_title')])
         to_write.append('\n\n\n' + block['text'] + '\n\n\n\n\n\n')
+    
+    if block_number > 0:
         
+        print('Each block of the provided story has:')
+        print('    - consistent hash values.')
+        print('    - consistent chapter numbering.')
+        print('    - consistent \'story_age_seconds\' fields.')
+        print('    - the hash value of the right ETH block.')
+        print('    - a \'signed_chapter_data\' field with a consistent digital signature.')
+        print('    - a \'chapter_data\' that is consistent with the genesis bock.')
+        print()
+        print('The blocks are correctly linked to each other:')
+        print('    - Each block correctly references the hash of the previous block.')
+        print('    - All the reported \'mining_date\' fields are consistent.')
+        print('    - Each block hash value conform to the difficulty set by the previous block.')
     
-    print('Each block of the provided story has has:')
-    print('    - consistent hash values.')
-    print('    - consistent chapter numbering.')
-    print('    - consistent \'story_age\' fields.')
-    print('    - the hash value of the right ETH block.')
-    print('    - a \'signed_chapter_data\' field with a consistent digital signature.')
-    print('    - a \'chapter_data\' that is consistent with the genesis bock.')
-    print()
-    print('The blocks are correctly linked to each other:')
-    print('    - Each block correctly references the hash of the previous block.')
-    print('    - All the reported \'mining_date\' fields are consistent.')
-    print('    - Each block hash value conform to the difficulty set by the previous block.')
-    
-    file_name = (genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt')
-    with open(file_name, "w") as outfile:
-        outfile.writelines(to_write)
+        file_name = (genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt')
+        with open(file_name, "w") as outfile:
+            outfile.writelines(to_write)
+            
+    else:
+        print('The provided genesis block has:')
+        print('    - a consistent hash value.')
+        print('    - consistent chapter numbering.')
+        print('    - consistent \'story_age_seconds\' fields.')
