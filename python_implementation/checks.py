@@ -208,7 +208,8 @@ elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(data
     genesis = get_genesis_block(data['chapter_data']['story_title'])
     check(validate_chapter_data(data, genesis), 'The signed chapter data does not comply with the rules of this story.')
     print('The submitted signed chapter data:')
-    print('    - follows the rules of the story.')
+    if len(genesis) > 0:
+        print('    - follows the rules of the story.')
     print('    - is signed correctly.')
     write_chapter_to_readable_file(data['chapter_data'])
     sys.exit(0)
@@ -242,6 +243,12 @@ elif set(['block_content', 'hash']) == set(data.keys()):
 elif all([x.isdigit() for x in data.keys()]):
     # full story
     
+    check('0' in data.keys(), 'The genesis block is absent from the submitted story.')
+    
+    block_numbers = np.array([int(k) for k in data.keys()])
+    block_numbers.sort()
+    check((block_numbers == np.arange(len(data))).all(), 'At least one block is missing from the submitted story.')
+
     # genesis block
     genesis = data['0']
     check(check_hash(genesis['hash'], genesis['block_content']), 'The hash value of the genesis block does not match its data.')
@@ -301,6 +308,7 @@ elif all([x.isdigit() for x in data.keys()]):
         print('The blocks are correctly linked to each other:')
         print('    - Each block correctly references the hash of the previous block.')
         print('    - All the reported \'mining_date\' fields are consistent.')
+        print('    - All the reported \'difficulty\' fields are set correctly.')
         print('    - Each block hash value conform to the difficulty set by the previous block.')
     
         file_name = (genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt')

@@ -167,4 +167,25 @@ This script performs the mining operation and can run for a very long time. It i
 
 ### checks.py
 
-todo...
+This script checks that the submitted data follows all the rules of the blockchain. It is called with the filename (a \*.json file) of the data to check as its single argument. There are 4 possibilities which are identified from the keys of the submitted \*.json file:
+
+- The user submits unsigned chapter data. The script tries to find a genesis block in the working directory by first looking for a validated story (filename pattern \[StoryTitle\]\_\[largest\_block\_number\].json and story title pulled from the submitted data) and then looking for a file called genesis_block.json. If a genesis block is available, then the script checks that the submitted chapter has the right 'story\_title', 'character\_limits' and 'number\_of\_chapters'. No checks are performed if there is no genesis block available.
+- The user submits a signed chapter data. The scripts tries to find a genesis block as above and performs the same checks. Furthermore, it checks that the chapter data is signed correctly. Without a genesis block, only the digital signature is checked.
+- The user submits a single complete block. All the above checks are performed as above (except if the submitted block is number '0', genesis block). Moreover, the hash value is recalculated and compared to the provided one.
+- The user submits multiple linked blocks. The script checks that these are a list of consecutive blocks starting with block '0'. Then all the above checks are performed independently on each block (with the genesis block being block '0'). Furthermore, the script checks that all the blocks are linked correctly. In particular, it checks the chapter numbering, the story\_age\_seconds field, the hash value of the ETH block, the hash value of the previous block, the mining date, the correct application of the difficulty setting and the difficulty setting its self.
+
+In all cases, the submitted file must be placed in the working directory. Furthermore, unless the user submits a genesis block and if all the tests are passed, the script produces a \*.txt file with the entire submitted the story in a readable form.
+
+## Disclaimer
+
+This is a beginner's project which has taught me everything that I know about blockchains. It surely contains mistakes and oversights. Any feedback would be greatly appreciated. In particular:
+
+- I tested everything as well as possible by myself. The next phase of testing is to get other people to participate and share files between writers and miners. In any case, bugs never really go away. Can you find any?
+- What attacks can you imagine taking place against this blockchain. Is it well enough protected?
+
+There still is much more to do:
+
+- get people to write a story.
+- switch out the \*.json files for ASN.1.
+- set up a proper p2p network.
+- what else?
