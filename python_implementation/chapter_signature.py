@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 30/07/2023 Steven Mathey
+# 04/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -28,10 +28,16 @@ def check_chapter_data(chapter_data, genesis):
         if len(chapter_data[key]) > genesis['character_limits'][key]:
             print('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
             test = False
+            
     if genesis.get('number_of_chapters',np.inf) < chapter_data['chapter_number']:
         # Only test that the chapter number is not too large if the field is present in the genesis block.
         print('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
+        
+    if genesis.get('story_title', chapter_data['story_title']) != chapter_data['story_title']:
+        print('The story title does not correspond to the one in the genesis block.')
+        test = False
+        
     return test
 
 def import_json(file_name, stop_if_fail = True):
@@ -69,20 +75,22 @@ def get_genesis_block(story_title):
     files = [x[:-5] for x in files if x.startswith(story_title)]
     
     if len(files) == 0:
-        print('The genesis block is not validated.')
+        print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
         return import_json('genesis_block.json', False)
     
-    block_number = max([int(x[-3:]) for x in files])
-    file_name = story_title+str(block_number).rjust(3, '0')+'.json'
-    
-    blockchain = import_json(file_name, False)
-    
-    provided_hash = blockchain['0']['hash']
-    genesis = blockchain['0']['block_content']
-    genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
-    
-    if genesis_hash == provided_hash:
-        return genesis
+    try:
+        block_number = max([int(x[len(story_title):len(story_title)+3]) for x in files])
+        file_name = story_title+str(block_number).rjust(3, '0')+'.json'
+
+        blockchain = import_json(file_name, False)
+
+        if check_hash(blockchain['0']['hash'],blockchain['0']['block_content']):
+            print('Using the genesis block from \''+file_name+'\'.')
+            return blockchain['0']['block_content']
+        
+    except:
+        print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
+        return import_json('genesis_block.json', False)
     
     sys.exit('The genesis block from this file has been tampered with. Don\'t use it.')
 
