@@ -91,6 +91,30 @@ This implementation of a blockchain story is managed with *.json files. The main
 			"nonce": "a3042c0b36c50aac0ce60c8a03544680777eb7e07ed9f3f18e87d5fe2c17fe10"
 		},
 		"hash": "00000027679c692b638a776453aee15ea24a2c478dce5c30a920214d8b051edd"
+	},
+	"2": {
+		"block_content": {
+			"signed_chapter_data": {
+				"chapter_data": {
+					"story_title": "test story",
+					"chapter_number": 2,
+					"author": "sethyvenatem",
+					"chapter_title": "second chapter",
+					"text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus."
+				},
+				"encrypted_hashed_chapter": "55c5a7f8a8fb9eafadf9babfc5dced7d3eb9dfcaee39e437e68fd2232d9c65ae558ef552b91c3a51982d41dd6f7c1565aaaec2bba3a4666c4b7a8e75e167624f1cdf668ad78c5725939d67a05602450d614f5707641ceccfe494c33367e43acf040ac00a9a6d04698b2a52e7071d5e803834729ab1486cf73bd5eeb815e7178f",
+				"public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f4742414e4b3069786a714e507a416b74477962586a312f687674504d376b574e774e6e6e39696c4f764871376e4b415464646449432b6f576a530a362f6a68465a366371394f3863546f443534417074627447677a536f6354486d4c546949717553534f636e2b6c666d5261667733346f71476a304a56776937590a38576f415050667462316337594375793275597a55704b4a6a6869555855335968525668723039584643616e355a636e4b34357441674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
+			},
+			"hash_previous_block": "00000027679c692b638a776453aee15ea24a2c478dce5c30a920214d8b051edd",
+			"hash_eth": "0xb5d7f472d532b96bbabf996d95417cc51ccecce04f4a6cf242de7af428da0931",
+			"miner_name": "sethy",
+			"mining_date": "2023/08/04 09:42:57",
+			"story_age_seconds": 270439,
+			"difficulty": 26,
+			"nb_tries": 25886391,
+			"nonce": "2b7bac769ebba7ee6fc3e5e95cd7420644171fd687423c22451932972f096941"
+		},
+		"hash": "00000022bbd18e3c2950daeb6ce19a0e5b74326dfc1b70fad54d2c486bff0bcd"
 	}
 }
 ```

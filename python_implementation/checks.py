@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 03/08/2023 Steven Mathey
+# 04/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -169,7 +169,7 @@ def get_difficulty(genesis, block, previous_block):
 
     if mining_date > previous_mining_date + mining_delay + intended_mining_time + grace:
         return previous_block['difficulty'] - 1
-    elif block['mining_date'] < previous_mining_date + mining_delay + intended_mining_time + grace:
+    elif mining_date < previous_mining_date + mining_delay + intended_mining_time - grace:
         return previous_block['difficulty'] + 1
     return previous_block['difficulty']
 
@@ -256,7 +256,7 @@ elif all([x.isdigit() for x in data.keys()]):
     check(genesis['chapter_number'] == 0, 'The chapter number is not zero in the genesis block.')
     check(genesis['story_age_seconds'] == 0.0, 'The story age is not zero in the genesis block.')
     
-    to_write = ''
+    to_write = ['Story title: '+genesis['story_title']+'\n\n\n\n\n\n']
     block_number = 0
     for block_number in range(1,len(data)):
         # Chapter blocks
@@ -279,7 +279,7 @@ elif all([x.isdigit() for x in data.keys()]):
         
         check(get_eth_block_info(earliest_mining_date) == block['hash_eth'], 'The \'hash_eth\' field of block '+str(block_number)+' does not match the right ETH block.')
         
-        check(previous_block['story_age_seconds'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == dt.timedelta(days = block['story_age_seconds']), 'The story age of block '+str(block_number)+' is not calculated correctly.')
+        check(previous_block['story_age_seconds'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == block['story_age_seconds'], 'The story age of block '+str(block_number)+' is not calculated correctly.')
         
         check(get_difficulty(genesis, block, previous_block) == block['difficulty'], 'The difficulty of block '+str(block_number)+' was not calculated correctly.')
         
@@ -287,13 +287,14 @@ elif all([x.isdigit() for x in data.keys()]):
         
         check(validate_chapter_data(block, genesis), 'The signed chapter data of block '+str(block_number)+' does not comply with the rules of this story.')
         
+        block = block['chapter_data']
+        
         check(block['story_title'] == genesis['story_title'], 'The chapter title of block '+str(block_number)+' does not match the title in the genesis block.')
         
         check(block['chapter_number'] == block_number, 'The chapter number of block '+str(block_number)+' is not '+str(block_number)+'.')
         
-        block = block['chapter_data']
-        to_write.append([(k.replace('_',' ')+':').title() + ' ' + str(block[k])+'\n\n' for k in block.keys() if (k!='text') and (k!='story_title')])
-        to_write.append('\n\n\n' + block['text'] + '\n\n\n\n\n\n')
+        to_write = to_write + ([(k.replace('_',' ')+':').title() + ' ' + str(block[k])+'\n\n' for k in block.keys() if (k!='text') and (k!='story_title')])
+        to_write.append('\n' + block['text'] + '\n\n\n\n\n\n')
     
     if block_number > 0:
         
@@ -311,12 +312,15 @@ elif all([x.isdigit() for x in data.keys()]):
         print('    - All the reported \'difficulty\' fields are set correctly.')
         print('    - Each block hash value conform to the difficulty set by the previous block.')
     
-        file_name = (genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt')
+        file_name = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt'
         with open(file_name, "w") as outfile:
             outfile.writelines(to_write)
-            
+        
     else:
         print('The provided genesis block has:')
         print('    - a consistent hash value.')
         print('    - consistent chapter numbering.')
         print('    - consistent \'story_age_seconds\' fields.')
+        
+else:
+    print('The submitted file is not recognised.')

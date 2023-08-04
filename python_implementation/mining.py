@@ -229,7 +229,7 @@ difficulty = previous_block['block_content']['difficulty']
 new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
 # Set the hash value below which the block hash has to be. Use powers of 2 so that the difficulty is doubled as difficulty increases by 1.
 max_hash = 2**(256-difficulty)-1
-print('Start mining! On my computer, it takes about '+str(time_to_mine_days(difficulty)*24)+' hours to complete.')
+print('Start mining (at '+ dt.datetime.strftime(get_now(), '%Y/%m/%d %H:%M:%S')+' UTC)! On my computer, it takes about '+str(round(time_to_mine_days(difficulty)*24,3))+' hours to complete.')
 nb_tries = 1
 start_time = pytz.utc.localize(dt.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
 new_block['nb_tries'] = nb_tries
