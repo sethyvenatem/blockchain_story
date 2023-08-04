@@ -41,7 +41,7 @@ def check_chapter_data(chapter_data, genesis):
     return test
 
 def import_json(file_name, stop_if_fail = True):
-    
+
     if file_name[-5:].lower() != '.json':
         sys.exit('The file name ('+file_name+') must end with \'.json\'.')
         
@@ -49,10 +49,17 @@ def import_json(file_name, stop_if_fail = True):
         return json.load(open(file_name))
     except:
         if stop_if_fail:
-            print('Could not find '+file_name+'.')
-            sys.exit(0)
+            if file_name in glob.glob('*.json'):
+                print('Something is wrong withe the *.json file.')
+                sys.exit(0)
+            else:
+                print('Could not find '+file_name+'.')
+                sys.exit(0)
         else:
-            print('Could not find '+file_name+'.')
+            if file_name in glob.glob('*.json'):
+                print('Something is wrong withe the *.json file.')
+            else:
+                print('Could not find '+file_name+'.')
             return {}
 
 def write_chapter_to_readable_file(chapter_data):
