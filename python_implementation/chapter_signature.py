@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 04/08/2023 Steven Mathey
+# 06/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -124,6 +124,13 @@ def check(statement,message):
         print(message)
         sys.exit()
         
+def check_hash(provided_hash,block_content):
+    computed_hash = rsa.compute_hash(json.dumps(block_content).encode('utf8'), 'SHA-256').hex()
+    
+    if computed_hash == provided_hash:
+        return True
+    return False
+
 ################################# The program starts here ################################################
     
 # Get the chapter data

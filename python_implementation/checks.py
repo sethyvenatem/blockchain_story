@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 04/08/2023 Steven Mathey
+# 06/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -331,7 +331,7 @@ elif all([x.isdigit() for x in data.keys()]):
         print('    - All the reported \'difficulty\' fields are set correctly.')
         print('    - Each block hash value conform to the difficulty set by the previous block.')
     
-        file_name = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') + '_'+'.txt'
+        file_name = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') +'.txt'
         with open(file_name, "w") as outfile:
             outfile.writelines(to_write)
         
