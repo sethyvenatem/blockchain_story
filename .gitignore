@@ -5,6 +5,7 @@
 *.txt
 *.png
 *.jpg
+work.py
 just_in_case.py
 work.ipynb
 !genesis_block.json

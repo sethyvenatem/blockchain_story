@@ -189,6 +189,8 @@ This script validates and adds one block to the existing story. It is used a bit
 
 This script performs the mining operation and can run for a very long time. It is however not a problem a problem to interrupt it and start again because the mining is done randomly. The script creates one file with the newly validated story in the working directory.
 
+The script offers to send the *\.json file of the obtained validated story directly to the discord server through a webhook. Type in 'y' ('yes', 'Y', 'YES', ..., or 'yEs') the enter when prompted.
+
 ### checks.py
 
 This script checks that the submitted data follows all the rules of the blockchain. It is called with the filename (a \*.json file) of the data to check as its single argument. There are 4 possibilities which are identified from the keys of the submitted \*.json file:

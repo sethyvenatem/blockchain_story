@@ -1,3 +1,4 @@
+discord_webhook==1.2.1
 numpy==1.23.3
 pytz==2022.2.1
 rsa==4.9

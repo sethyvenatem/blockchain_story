@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 04/08/2023 Steven Mathey
+# 08/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -36,6 +36,7 @@ from web3 import Web3, AsyncWeb3
 import pytz
 import numpy as np
 import random
+from discord_webhook import DiscordWebhook, DiscordEmbed
 
 def check_chapter_data(chapter_data, genesis):
     # This checks that the chapter to submit does not violate the rules given in the genesis block.
@@ -255,3 +256,30 @@ story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
 new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
+    
+send = input('Hurray, you validated a new block! Do you want to send it automatically to the discord server (y/n)?')
+if send.lower() in ['y','yes']:
+    # Thanks! https://www.reddit.com/r/Discord_Bots/comments/iirmzy/how_to_send_files_using_discord_webhooks_python/
+    #Replace the webhook URL with your own
+    webhook_url = 'https://discord.com/api/webhooks/1138436079448498176/ErxoQ7gHxjoowu5BNyxxhg9bUGkqK6CtkZzk9xjRoOs2MjyaLpoQkwq_njmhPyYltxIH'
+    #Create a Discord webhook object
+    webhook = DiscordWebhook(url=webhook_url)
+    #Create a Discord embed object
+    embed = DiscordEmbed()
+    #Set the title and description of the embed
+    embed.set_title('Miner '+miner_name+' validated a new chapter!')
+    embed.set_description(new_file_name)
+    #Add the embed to the webhook
+    webhook.add_embed(embed)
+    response = webhook.execute()
+    
+    webhook = DiscordWebhook(url=webhook_url)
+    #Add the file or files to the embed
+    with open(new_file_name, 'rb') as f: 
+        file_data = f.read() 
+    webhook.add_file(file_data, new_file_name)
+    #Send the webhook
+    response = webhook.execute()
+else:
+    print('Your newly validated story was not sent to the discord server!')
+    print('Quickly, upload it manually at https://discord.gg/wD8zs75tck')
