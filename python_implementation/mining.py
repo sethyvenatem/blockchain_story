@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 08/08/2023 Steven Mathey
+# 09/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -256,6 +256,7 @@ story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
 new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'.json'
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
+print('The newly validated story was saved in the working directory in '+new_file_name+'.')
     
 send = input('Hurray, you validated a new block! Do you want to send it automatically to the discord server (y/n)?')
 if send.lower() in ['y','yes']:

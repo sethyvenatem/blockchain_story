@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 06/08/2023 Steven Mathey
+# 09/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -72,6 +72,8 @@ def write_chapter_to_readable_file(chapter_data):
     
     with open(file_name, "w") as outfile:
         outfile.writelines(to_write)
+    
+    print('The chapter content was saved in an easily readable form in the working directory in '+file_name+'.')
         
 def get_genesis_block(story_title):
     # Get the genesis block. Use the validated blockchain file if available and default to the local file 'genesis_block.json' if not.
@@ -107,6 +109,8 @@ def write_signed_chapter_to_file(signed_chapter_data):
     signed_file_name = 'signed_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
     with open(signed_file_name, "w") as outfile:
         outfile.write(json.dumps(signed_chapter_data))
+        
+    print('The signed chapter data was saved in the working directory in '+signed_file_name+'.')
 
 def write_keys_to_file(public_key,private_key):
     

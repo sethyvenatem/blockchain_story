@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 06/08/2023 Steven Mathey
+# 09/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -334,6 +334,7 @@ elif all([x.isdigit() for x in data.keys()]):
         file_name = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') +'.txt'
         with open(file_name, "w") as outfile:
             outfile.writelines(to_write)
+        print('The full story up until now was saved in an easily readable form in the working directory in '+file_name+'.')
         
     else:
         print('The provided genesis block has:')
