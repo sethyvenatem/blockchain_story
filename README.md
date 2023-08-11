@@ -212,6 +212,7 @@ This is a beginner's project which has taught me everything that I know about bl
 There still is much more to do:
 
 - get people to write a story.
+- Is it worth keeping track of the nonce values that were already tried in the mining process? Beyond which difficulty does this become impractical and/or 
 - switch out the \*.json files for ASN.1.
 - set up a proper p2p network.
 - what else?
