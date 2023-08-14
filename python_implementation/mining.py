@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 09/08/2023 Steven Mathey
+# 14/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -278,6 +278,7 @@ if send.lower() in ['y','yes']:
     #Add the file or files to the embed
     with open(new_file_name, 'rb') as f: 
         file_data = f.read() 
+    new_file_name = 'SPOILER_'+new_file_name
     webhook.add_file(file_data, new_file_name)
     #Send the webhook
     response = webhook.execute()
