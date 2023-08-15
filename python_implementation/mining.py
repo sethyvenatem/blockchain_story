@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 14/08/2023 Steven Mathey
+# 15/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -200,7 +200,7 @@ if len(sys.argv) == 3:
     genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
     genesis = {'block_content': genesis.copy()}
     genesis['hash'] = genesis_hash
-    file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000.json'
+    file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000_'+genesis['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps({'0': genesis}))
     sys.exit()
@@ -253,7 +253,8 @@ print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tr
 new_block = {'block_content': new_block.copy()}
 new_block['hash'] = new_hash.hex()
 story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
-new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'.json'
+new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'_'+new_block['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
+
 with open(new_file_name, "w") as outfile:
     outfile.write(json.dumps(story))
 print('The newly validated story was saved in the working directory in '+new_file_name+'.')

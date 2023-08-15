@@ -8,6 +8,7 @@
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
 # Thanks! https://www.reddit.com/r/Discord_Bots/comments/iirmzy/how_to_send_files_using_discord_webhooks_python/
+# Thanks! https://stackoverflow.com/questions/60408884/how-do-i-get-the-bot-to-post-spoiler-images-in-discord-py?rq=3
 
 file_name = 'welcome-and-how-it-works_webhook_link.txt'
 with open(file_name, 'r') as f:
