@@ -1,15 +1,16 @@
 {
-	"story_title": "test story",
+	"story_title": "Very first story",
 	"chapter_number": 0,
 	"author": "Steven Mathey",
 	"character_limits": {
 		"chapter_title": 150,
-		"author": 1000,
+		"author": 100,
 		"text": 30000
 	},
-	"number_of_chapters": 10,
-	"mining_delay_days": 0.001,
-	"intended_mining_time_days": 0.001,
-	"mining_date": "2023/08/08 12:00:00",
-	"story_age_seconds": 0
+	"number_of_chapters": 3,
+	"mining_delay_days": 1,
+	"intended_mining_time_days": 0.1,
+	"mining_date": "2023/08/15 13:00:00",
+	"story_age_seconds": 0,
+	"miner_name": "sethyvenatem"
 }
