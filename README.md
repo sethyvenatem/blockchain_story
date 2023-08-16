@@ -8,7 +8,7 @@ In principle, such a blockchain only has to be defined before it can start growi
 
 - It is a proof of concept. If it's possible to code, then the rules make sense and can be implemented.
 - It makes it easier for participants to participate. There is no need to code. Just use this implementation.
-- It has teaches all the basics of blockchain technology.
+- It teaches all the basics of blockchain technology.
 - It provides a formal and precise definition of the blockchain ant its rules.
 
 The repository provides all the tools necessary to participate in the story-writing: One script to digitally sign the chapter to be validated (chapter\_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one script to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (checks.py). The third script also creates an easily readable *.txt file with only the story content. The story does not have to be written in English. The encoding is utf8. This implementation was however not tested with special characters.
@@ -23,13 +23,14 @@ The details of the rules to add a chapter to the story are inserted in the first
     - The title of the story is fixed at the beginning and must be repeated correctly in each block.
     - The amount of characters in the chapter title, author name and chapter text can be limited.
     - The total amount of chapters in the story can be limited.
+
 These narrative rules can be different for every new story. Except for the story title, they are optional. To skip any of them, the user can just omit the corresponding field in the genesis block. These rules are imposed by first validating the genesis block and then checking each new block against it.
 
 - The 'blockchain' rules are:
     - Every block keeps track of its mining date.
     - There is an imposed delay between the mining of two consecutive blocks.
     - Each block contains a difficulty parameter (diff, integer between 0 and 256) that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2<sup>256-diff</sup>-1. This means that, on average, about 2<sup>diff</sup> guesses will be necessary to validate a block.
-    - The difficulty is adjusted (in steps of plus or minus 1) unless the intended mining time is reached.
+    - The difficulty is adjusted (in steps of plus or minus 1) unless the intended mining time is matched.
    
 These rules are imposed with the use of different systems:
 
@@ -44,7 +45,7 @@ In the case of a story with multiple forks, the reported mining dates are used t
 
 ## Description of *.json files
 
-This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as \[StoryTitle\]\_\[largest\_block\_number\].json. For example the first three blocks of 'test story' are stored in TestStory\_002.json, which looks like:
+This implementation of a blockchain story is managed with *.json files. The main story is stored in files with name as \[StoryTitle\]\_\[largest\_block\_number\]\_\[mining\_date\_of\_latest\_block\].json. For example the first three blocks of 'test story' are stored in TestStory\_002\_2023\_08\_04\_09\_42\_57.json, which looks like:
 
 ```json
 {
@@ -135,9 +136,9 @@ The genesis block (block '0') has the following special fields that are not pres
 - 'number\_of\_chapters' This is an integer denoting the maximum number of chapters that the story can contain.
 - 'mining\_delay\_days' This is a float denoting the amount of days after which new blocks can be mined.
 - 'intended\_mining\_time\_days' This is a float denoting the expected mining time (in days). It is used to dynamically set the difficulty of the mining.
-These fields can be set freely before the first chapter is written but cannot be modified afterwards. They shape the story to come.
 
-The other blocks (the actual chapters) have the following additional fields:
+These fields can be set freely before the first chapter is written but cannot be modified afterwards. They shape the story to come. The other blocks (the actual chapters) have the following additional fields:
+
 - 'signed\_chapter\_data' See below.
 - 'hash\_previous\_block' This is the hash value of the previous block. It ensures that each block is bonded to the previous one.
 - 'hash\_eth' This is the hash of the first block of the ETH blockchain that comes after the first authorised mining date. This date is the sum of the mining date of the previous block and the mining delay set in the genesis block.
@@ -173,29 +174,31 @@ The details on how the three python scripts work are in the scripts as comments.
 This script performs a digital signature on any given chapter. This is done with the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)). A new pair of private and public keys are generated when the script is run. The private key is used to encrypt the (hash of) the chapter data and both the encrypted hash and the public key are provided together with the chapter data. The public key can be used to decrypt the data and check that it is the same as the clear data. This test proves that the chapter data has not been modified because only the holder of the corresponding private key can produce such an encryption.
 
 The chapter data can be provided in two ways:
+
 - Place it in a json file, put the file in the same directory as the script and call the script with the name of the file as argument. The json file must have the following fields: 'story\_title', 'chapter\_number', 'author', 'chapter\_title' and 'text'. The 'chapter\_number' value must be an integer. The other field values are strings. New lines must be indicated by '\n'.
-- Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
+- Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a \*.txt file in the same directory as the script. Line returns are then handled by the \*.txt format and converted to '\n' by the script.
 
 If possible, the script checks that the chapter data to sign is consistent with the genesis block. It looks through the working directory and uses the genesis block of the longest validated story if there is one. If not, it looks for a file called 'genesis\_block.json'. If neither are available, then the test is skipped.
 
 The script creates 3 files in the working directory:
-- the signed chapter data.
-- a *.json file with the private and public keys
-- a *.txt file with the chapter data displayed in an easily readable way.
+
+- the signed chapter data (\*.json file).
+- a \*.json file with the private and public keys
+- a \*.txt file with the chapter data displayed in an easily readable way.
 
 ### mining.py
 
-This script validates and adds one block to the existing story. It is used a bit differently for the genesis block and the others. To validate an ordinary block, run the script with three arguments: the file name of the up-until-now validated story, the file name for the signed chapter data and the miner name. To validate the genesis block, run it with only two arguments: the name of the genesis block *.json file, and the miner name. All the files must be placed in the working directory.
+This script validates and adds one block to the existing story. It is used a bit differently for the genesis block and the others. To validate an ordinary block, run the script with three arguments: the file name of the up-until-now validated story, the file name for the signed chapter data and the miner name. To validate the genesis block, run it with only two arguments: the name of the genesis block \*.json file, and the miner name. All the files must be placed in the working directory.
 
-This script performs the mining operation and can run for a very long time. It is however not a problem a problem to interrupt it and start again because the mining is done randomly. The script creates one file with the newly validated story in the working directory.
+This script performs the mining operation and can run for a very long time. It is however not a problem a problem to interrupt it and start again because the mining is done randomly. 
 
-The script offers to send the *\.json file of the obtained validated story directly to the discord server through a webhook. Type in 'y' ('yes', 'Y', 'YES', ..., or 'yEs') the enter when prompted.
+The script creates one file with the newly validated story in the working directory. The script offers to send the \*.json file of the obtained validated story directly to the discord server through a webhook. Type in 'y' ('yes', 'Y', 'YES', ..., or 'yEs') then 'enter' when prompted.
 
 ### checks.py
 
 This script checks that the submitted data follows all the rules of the blockchain. It is called with the filename (a \*.json file) of the data to check as its single argument. There are 4 possibilities which are identified from the keys of the submitted \*.json file:
 
-- The user submits unsigned chapter data. The script tries to find a genesis block in the working directory by first looking for a validated story (filename pattern \[StoryTitle\]\_\[largest\_block\_number\].json and story title pulled from the submitted data) and then looking for a file called genesis_block.json. If a genesis block is available, then the script checks that the submitted chapter has the right 'story\_title', 'character\_limits' and 'number\_of\_chapters'. No checks are performed if there is no genesis block available.
+- The user submits unsigned chapter data. The script tries to find a genesis block in the working directory by first looking for a validated story (story title pulled from the submitted data and filename pattern \[StoryTitle\]\_\[largest\_block\_number\]\_\[mining\_date\_of\_latest\_block\].json). If this does not work, it looks for a file called genesis_block.json. If a genesis block is available, then the script checks that the submitted chapter has the right 'story\_title', 'character\_limits' and 'number\_of\_chapters'. No checks are performed if there is no genesis block available.
 - The user submits a signed chapter data. The scripts tries to find a genesis block as above and performs the same checks. Furthermore, it checks that the chapter data is signed correctly. Without a genesis block, only the digital signature is checked.
 - The user submits a single complete block. All the above checks are performed as above (except if the submitted block is number '0', genesis block). Moreover, the hash value is recalculated and compared to the provided one.
 - The user submits multiple linked blocks. The script checks that these are a list of consecutive blocks starting with block '0'. Then all the above checks are performed independently on each block (with the genesis block being block '0'). Furthermore, the script checks that all the blocks are linked correctly. In particular, it checks the chapter numbering, the story\_age\_seconds field, the hash value of the ETH block, the hash value of the previous block, the mining date, the correct application of the difficulty setting and the difficulty setting its self.
@@ -212,7 +215,7 @@ This is a beginner's project which has taught me everything that I know about bl
 There still is much more to do:
 
 - get people to write a story.
-- Is it worth keeping track of the nonce values that were already tried in the mining process? Beyond which difficulty does this become impractical and/or 
+- How much can the mining be sped up by keeping track of the nonce values that were already tried? Beyond which difficulty does this become impractical and/or irrelevant?
 - switch out the \*.json files for ASN.1.
 - set up a proper p2p network.
 - what else?
