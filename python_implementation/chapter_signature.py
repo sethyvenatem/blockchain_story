@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 09/08/2023 Steven Mathey
+# 16/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -82,27 +82,20 @@ def get_genesis_block(story_title):
     story_title = story_title.title().replace(' ','')+'_'
     files = glob.glob('*.json')
     
-    files = [x[:-5] for x in files if x.startswith(story_title)]
+    files = [x for x in files if x.startswith(story_title)]
     if len(files) == 0:
         print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
         return import_json('genesis_block.json', False)
     
+    file_index = np.argmax(np.array([int(x[len(story_title):len(story_title)+3]) for x in files]))
+    file_name = files[file_index]
+
     try:
-        block_number = max([int(x[len(story_title):len(story_title)+3]) for x in files])
-        
-        files = [f for f in files if str(block_number).rjust(3, '0') in f]
-        if len(files) == 1:
-            file_name = files[0]+'.json'
+        blockchain = import_json(file_name, False)
+        if check_hash(blockchain['0']['hash'],blockchain['0']['block_content']):
+            print('Using the genesis block from \''+file_name+'\'.')
+            return blockchain['0']['block_content']
 
-            blockchain = import_json(file_name, False)
-
-            if check_hash(blockchain['0']['hash'],blockchain['0']['block_content']):
-                print('Using the genesis block from \''+file_name+'\'.')
-                return blockchain['0']['block_content']
-        else:
-            print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
-            return import_json('genesis_block.json', False)
-            
     except:
         print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
         return import_json('genesis_block.json', False)
