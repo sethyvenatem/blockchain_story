@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 16/08/2023 Steven Mathey
+# 29/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -73,16 +73,20 @@ def validate_chapter_data(signed_chapter_data, genesis):
 def import_json(file_name):
 
     if file_name[-5:].lower() != '.json':
-        sys.exit('The file name ('+file_name+') must end with \'.json\'.')
+        print('The file name ('+file_name+') must end with \'.json\'.')
+        input('Press enter to end.')
+        sys.exit()
         
     try:
         return json.load(open(file_name))
     except:
         if file_name in glob.glob('*.json'):
             print('Something is wrong withe the *.json file.')
+            input('Press enter to end.')
             sys.exit(0)
         else:
             print('Could not find '+file_name+'.')
+            input('Press enter to end.')
             sys.exit(0)
 
 def get_eth_block_info(target_date, retry = True):
@@ -127,6 +131,7 @@ def get_eth_block_info(target_date, retry = True):
                 return None
         else:
             print('Could not find ETH block.')
+            input('Press enter to end.')
             sys.exit(0)
         
     if w3.eth.get_block('finalized').number < target_block:
@@ -173,6 +178,7 @@ def check(statement,message):
     
     if not(statement):
         print(message)
+        input('Press enter to end.')
         sys.exit()
         
 def get_now():
@@ -203,6 +209,7 @@ if (len(sys.argv) == 3) or (len(sys.argv) == 2):
     file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000_'+genesis['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps({'0': genesis}))
+    input('Press enter to end.')
     sys.exit()
 
 check(len(sys.argv) == 4, str(len(sys.argv)-1)+' arguments provided. This is wrong.')

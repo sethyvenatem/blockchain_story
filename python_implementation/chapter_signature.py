@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 16/08/2023 Steven Mathey
+# 29/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -43,7 +43,9 @@ def check_chapter_data(chapter_data, genesis):
 def import_json(file_name, stop_if_fail = True):
 
     if file_name[-5:].lower() != '.json':
-        sys.exit('The file name ('+file_name+') must end with \'.json\'.')
+        print('The file name ('+file_name+') must end with \'.json\'.')
+        input('Press enter to end.')
+        sys.exit()
         
     try:
         return json.load(open(file_name))
@@ -51,9 +53,11 @@ def import_json(file_name, stop_if_fail = True):
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
+                input('Press enter to end.')
                 sys.exit(0)
             else:
                 print('Could not find '+file_name+'.')
+                input('Press enter to end.')
                 sys.exit(0)
         else:
             if file_name in glob.glob('*.json'):
@@ -100,7 +104,9 @@ def get_genesis_block(story_title):
         print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
         return import_json('genesis_block.json', False)
     
-    sys.exit('The genesis block from this file has been tampered with. Don\'t use it.')
+    print('The genesis block from this file has been tampered with. Don\'t use it.')
+    input('Press enter to end.')
+    sys.exit()
 
 def write_signed_chapter_to_file(signed_chapter_data):
     
@@ -125,6 +131,7 @@ def check(statement,message):
     
     if not(statement):
         print(message)
+        input('Press enter to end.')
         sys.exit()
         
 def check_hash(provided_hash,block_content):
@@ -152,7 +159,9 @@ else:
         with open(text_file_name, 'r') as infile:
             chapter_data['text'] = infile.read()
     else:
-        sys.exit('The file name must end with \'.txt\'.')
+        print('The file name must end with \'.txt\'.')
+        input('Press enter to end.')
+        sys.exit()
 
 genesis = get_genesis_block(chapter_data['story_title'])
 

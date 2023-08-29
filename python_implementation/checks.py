@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 28/08/2023 Steven Mathey
+# 29/08/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -18,7 +18,9 @@ import glob
 def import_json(file_name, stop_if_fail = True):
 
     if file_name[-5:].lower() != '.json':
-        sys.exit('The file name ('+file_name+') must end with \'.json\'.')
+        print('The file name ('+file_name+') must end with \'.json\'.')
+        input('Press enter to end.')
+        sys.exit()
         
     try:
         return json.load(open(file_name))
@@ -26,9 +28,11 @@ def import_json(file_name, stop_if_fail = True):
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
+                input('Press enter to end.')
                 sys.exit(0)
             else:
                 print('Could not find '+file_name+'.')
+                input('Press enter to end.')
                 sys.exit(0)
         else:
             if file_name in glob.glob('*.json'):
@@ -107,13 +111,16 @@ def get_genesis_block(story_title):
         print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
         return import_json('genesis_block.json', False)
     
-    sys.exit('The genesis block from this file has been tampered with. Don\'t use it.')
+    print('The genesis block from this file has been tampered with. Don\'t use it.')
+    input('Press enter to end.')
+    sys.exit()
     
 def check(statement,message):
     # This function works like the assert statement, but does not raise an error. It just prints a message and terminates the script.
     
     if not(statement):
         print(message)
+        input('Press enter to end.')
         sys.exit()
 
 def write_chapter_to_readable_file(chapter_data):
@@ -169,6 +176,7 @@ def get_eth_block_info(target_date, retry = True):
                 return None
         else:
             print('Could not find ETH block.')
+            input('Press enter to end.')
             sys.exit(0)
         
     if w3.eth.get_block('finalized').number < target_block:
@@ -213,11 +221,13 @@ if set(['story_title', 'chapter_number', 'author', 'chapter_title', 'text']) == 
     if len(genesis) == 0:
         print('You are checking and unsigend chapter and there is no genesis block available. No check is performed.')
         write_chapter_to_readable_file(data)
+        input('Press enter to end.')
         sys.exit(0)
 
     check(check_chapter_data(data, genesis),'The chapter data does not comply with the rules of this story.')
     print('The submitted unsigned chapter data follows the rules of the story.')
     write_chapter_to_readable_file(data)
+    input('Press enter to end.')
     sys.exit(0)
     
 elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(data.keys()):
@@ -230,6 +240,7 @@ elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(data
         print('    - follows the rules of the story.')
     print('    - is signed correctly.')
     write_chapter_to_readable_file(data['chapter_data'])
+    input('Press enter to end.')
     sys.exit(0)
     
 elif set(['block_content', 'hash']) == set(data.keys()):
@@ -244,6 +255,8 @@ elif set(['block_content', 'hash']) == set(data.keys()):
         print('The provided genesis block has:')
         print('    - a consistent hash value.')
         print('    - consistent \'chapter_number\' and \'story_age_seconds\' fields.')
+        print()
+        input('Press enter to end.')
         sys.exit(0)
         
     elif 'signed_chapter_data' in data.keys():
@@ -256,6 +269,8 @@ elif set(['block_content', 'hash']) == set(data.keys()):
             print('    - \'chapter_data\' that is consistent with the genesis bock.')
         print('    - consistently signed \'chapter_data\'.')
         write_chapter_to_readable_file(data['signed_chapter_data']['chapter_data'])
+        print()
+        input('Press enter to end.')
         sys.exit()
         
 elif all([x.isdigit() for x in data.keys()]):
