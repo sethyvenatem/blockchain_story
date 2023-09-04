@@ -44,7 +44,8 @@ def import_json(file_name, stop_if_fail = True):
 
     if file_name[-5:].lower() != '.json':
         print('The file name ('+file_name+') must end with \'.json\'.')
-        input('Press enter to end.')
+        if interrupt_run:
+            input('Press enter to end.')
         sys.exit()
         
     try:
@@ -53,11 +54,13 @@ def import_json(file_name, stop_if_fail = True):
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
-                input('Press enter to end.')
+                if interrupt_run:
+                    input('Press enter to end.')
                 sys.exit(0)
             else:
                 print('Could not find '+file_name+'.')
-                input('Press enter to end.')
+                if interrupt_run:
+                    input('Press enter to end.')
                 sys.exit(0)
         else:
             if file_name in glob.glob('*.json'):
@@ -105,7 +108,8 @@ def get_genesis_block(story_title):
         return import_json('genesis_block.json', False)
     
     print('The genesis block from this file has been tampered with. Don\'t use it.')
-    input('Press enter to end.')
+    if interrupt_run:
+        input('Press enter to end.')
     sys.exit()
 
 def write_signed_chapter_to_file(signed_chapter_data):
@@ -131,7 +135,8 @@ def check(statement,message):
     
     if not(statement):
         print(message)
-        input('Press enter to end.')
+        if interrupt_run:
+            input('Press enter to end.')
         sys.exit()
         
 def check_hash(provided_hash,block_content):
@@ -142,7 +147,8 @@ def check_hash(provided_hash,block_content):
     return False
 
 ################################# The program starts here ################################################
-    
+
+interrupt_run = False
 # Get the chapter data
 if (len(sys.argv)  == 2):
     file_name = sys.argv[1]
@@ -160,7 +166,8 @@ else:
             chapter_data['text'] = infile.read()
     else:
         print('The file name must end with \'.txt\'.')
-        input('Press enter to end.')
+        if interrupt_run:
+            input('Press enter to end.')
         sys.exit()
 
 genesis = get_genesis_block(chapter_data['story_title'])
