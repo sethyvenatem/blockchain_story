@@ -6,6 +6,8 @@ import json
 import os
 import glob
 
+# use the json content to decide if it's a signed_chapter, validated story or something else.
+
 def import_json(file_name, stop_if_fail = True):
 
     if file_name[-5:].lower() != '.json':
@@ -28,7 +30,7 @@ def import_json(file_name, stop_if_fail = True):
             else:
                 print('Could not find '+file_name+'.')
             return {}
-        
+
 def open_chapter_signature_window(event):
     
     lbl_greeting.grid_forget()
@@ -73,7 +75,6 @@ def run_chapter_signature(event):
         outfile.write(json.dumps(chapter_data))
     
     os.system('python3 chapter_signature.py temp_chapter_data.json > temp_chapter_signature.txt')
-    
     
     lbl_sign_greeting.grid_forget()
     lbl_story_title.grid_forget()
@@ -154,10 +155,14 @@ def open_mining_window(event):
         
     table_validated_chapters.grid(row = 1,column = 0, padx = 10, pady = 10)
     
-    listbox_validated_chapters = tk.Listbox(width=40, height=10, selectmode='SINGLE')
-    for ind, validated_story in enumerate(validated_stories_json):
-        listbox_validated_chapters.insert(ind,' x ')
-    listbox_validated_chapters.grid(row = 1, column = 2,sticky = 'w')
+    def get_validated_story_file(a):
+        # thanks: https://stackoverflow.com/questions/30614279/tkinter-treeview-get-selected-item-values
+        curItem = table_validated_chapters.focus()
+        global validated_story_file
+        validated_story_file = validated_stories[int(curItem)]
+    #        print(table_validated_chapters.item(curItem),curItem)
+
+    table_validated_chapters.bind('<ButtonRelease-1>', get_validated_story_file)
 
     lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
     lbl_chapter_choice.grid(row = 2, column = 0, sticky = 'nw', padx = 10)
@@ -183,18 +188,28 @@ def open_mining_window(event):
     
     table_signed_chapters.grid(row = 3,column = 0, padx = 10, pady = 10)
     
+    def get_signed_chapter_file(a):
+        curItem = table_signed_chapters.focus()
+        global signed_chapter_file
+        signed_chapter_file = signed_chapters[int(curItem)]
+    
+    table_signed_chapters.bind('<ButtonRelease-1>', get_signed_chapter_file)
+    
     lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
-    ent_miner_name = tk.Entry(width = 50)
     lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
     ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
     
     but_start_mining.grid(row = 7, column = 0,padx = 10, pady = 10)
+    
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
     #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
     
 def run_mining(event):
-    print('placeholder')
+    
+    miner_name = ent_miner_name.get()
+    
+    print('python3 mining.py '+validated_story_file + ' ' + signed_chapter_file + ' ' + miner_name)
     
 def open_check_window(event):
 
@@ -248,6 +263,8 @@ but_check_read.bind("<Button-1>", open_check_window)
 but_accept_entry.bind("<Button-1>", run_chapter_signature)
 
 but_start_mining.bind("<Button-1>", run_mining)
+
+ent_miner_name = tk.Entry(width = 50)
 
 window.mainloop()
 
