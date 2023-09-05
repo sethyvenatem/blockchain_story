@@ -1,8 +1,34 @@
+#from tkinter import *
 import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
+from  tkinter import ttk
 import json
 import os
+import glob
 
+def import_json(file_name, stop_if_fail = True):
+
+    if file_name[-5:].lower() != '.json':
+        print('The file name ('+file_name+') must end with \'.json\'.')
+        sys.exit()
+        
+    try:
+        return json.load(open(file_name))
+    except:
+        if stop_if_fail:
+            if file_name in glob.glob('*.json'):
+                print('Something is wrong withe the *.json file.')
+                sys.exit(0)
+            else:
+                print('Could not find '+file_name+'.')
+                sys.exit(0)
+        else:
+            if file_name in glob.glob('*.json'):
+                print('Something is wrong withe the *.json file.')
+            else:
+                print('Could not find '+file_name+'.')
+            return {}
+        
 def open_chapter_signature_window(event):
     
     lbl_greeting.grid_forget()
@@ -87,10 +113,47 @@ def open_mining_window(event):
     lbl_mine_greeting = tk.Label(text="Chose a chapter to mine.")
     lbl_mine_greeting.grid(row = 0, column = 1)
     
-    json_files = glob.glob('*.json')
+    json_files = glob.glob('*.json')    
+    validated_stories = sorted([f for f in json_files if not(f.startswith('signed_')) and not(f.startswith('keys_')) and not(f.startswith('chapter_data')) and not(f.startswith('genesis_block'))])
     signed_chapters = sorted([f for f in json_files if f.startswith('signed_')])
-    validated_stories = sorted([f for f in json_files if not(f.startswith('signed_')) and not(f.startswith('keys_'))])
+    
+    # Import all the available signed chapters and validated stories
+    validated_stories_json = []
+    for validated_story in validated_stories:
+        temp = import_json(validated_story)
+        temp = temp[str(max([int(b) for b in temp.keys()]))]['block_content']
+        validated_stories_json.append(temp)
+    signed_chapters_json = []
+    for signed_chapter in signed_chapters:
+        signed_chapters_json.append(import_json(signed_chapter))
+
+    table_validated_chapters = ttk.Treeview()
+    
+    table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_age_seconds')
+    table_validated_chapters.column("#0", width=0, stretch='NO')
+    table_validated_chapters.column("story_title", width=80)
+    table_validated_chapters.column("chapter_number",width=80)
+    table_validated_chapters.column("miner_name",width=80)
+    table_validated_chapters.column("story_age_seconds",width=80)
+    
+    table_validated_chapters.heading("#0",text="",)
+    table_validated_chapters.heading("story_title",text="Story title")
+    table_validated_chapters.heading("chapter_number",text="Last validated chapter nb")
+    table_validated_chapters.heading("miner_name",text="Last miner name")
+    table_validated_chapters.heading("story_age_seconds",text="Story age (seconds)")
+    
+    for ind, validated_story in enumerate(validated_stories_json):
+        if 'signed_chapter_data' in validated_story.keys():
+            val = (validated_story['signed_chapter_data']['chapter_data']['story_title'], validated_story['signed_chapter_data']['chapter_data']['chapter_number'],validated_story['miner_name'],validated_story['story_age_seconds'])
+        else:
+            val = (validated_story['story_title'], validated_story['chapter_number'],validated_story['miner_name'],validated_story['story_age_seconds'])
+        table_validated_chapters.insert(parent='',index='end',iid=ind,text='', values = val)
+    
+    table_validated_chapters.grid(row = 0,column = 0)
+
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
+    # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
+    #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
     
 def open_check_window(event):
 
