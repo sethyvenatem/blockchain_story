@@ -110,8 +110,8 @@ def open_mining_window(event):
     but_mine_chapter.grid_forget()
     but_check_read.grid_forget()
     
-    lbl_mine_greeting = tk.Label(text="Chose a chapter to mine.")
-    lbl_mine_greeting.grid(row = 0, column = 1)
+    lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")
+    lbl_story_choice.grid(row = 0, column = 0, sticky = 'nw', padx = 10)
     
     json_files = glob.glob('*.json')    
     validated_stories = sorted([f for f in json_files if not(f.startswith('signed_')) and not(f.startswith('keys_')) and not(f.startswith('chapter_data')) and not(f.startswith('genesis_block'))])
@@ -125,22 +125,24 @@ def open_mining_window(event):
         validated_stories_json.append(temp)
     signed_chapters_json = []
     for signed_chapter in signed_chapters:
-        signed_chapters_json.append(import_json(signed_chapter))
+        temp = import_json(signed_chapter)
+        temp = temp['chapter_data']
+        signed_chapters_json.append(temp)
 
     table_validated_chapters = ttk.Treeview()
     
     table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_age_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
-    table_validated_chapters.column("story_title", width=80)
-    table_validated_chapters.column("chapter_number",width=80)
-    table_validated_chapters.column("miner_name",width=80)
-    table_validated_chapters.column("story_age_seconds",width=80)
+    table_validated_chapters.column("story_title", width=150)
+    table_validated_chapters.column("chapter_number",width=150)
+    table_validated_chapters.column("miner_name",width=150)
+    table_validated_chapters.column("story_age_seconds",width=150)
     
     table_validated_chapters.heading("#0",text="",)
     table_validated_chapters.heading("story_title",text="Story title")
     table_validated_chapters.heading("chapter_number",text="Last validated chapter nb")
     table_validated_chapters.heading("miner_name",text="Last miner name")
-    table_validated_chapters.heading("story_age_seconds",text="Story age (seconds)")
+    table_validated_chapters.heading("story_age_seconds",text="Story age")
     
     for ind, validated_story in enumerate(validated_stories_json):
         if 'signed_chapter_data' in validated_story.keys():
@@ -148,12 +150,51 @@ def open_mining_window(event):
         else:
             val = (validated_story['story_title'], validated_story['chapter_number'],validated_story['miner_name'],validated_story['story_age_seconds'])
         table_validated_chapters.insert(parent='',index='end',iid=ind,text='', values = val)
+#        tk.Checkbutton(text='').grid(row=1, column = 1, sticky='w')
+        
+    table_validated_chapters.grid(row = 1,column = 0, padx = 10, pady = 10)
     
-    table_validated_chapters.grid(row = 0,column = 0)
+    listbox_validated_chapters = tk.Listbox(width=40, height=10, selectmode='SINGLE')
+    for ind, validated_story in enumerate(validated_stories_json):
+        listbox_validated_chapters.insert(ind,' x ')
+    listbox_validated_chapters.grid(row = 1, column = 2,sticky = 'w')
 
+    lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
+    lbl_chapter_choice.grid(row = 2, column = 0, sticky = 'nw', padx = 10)
+    
+    table_signed_chapters = ttk.Treeview()
+    
+    table_signed_chapters['columns'] = ('story_title', 'chapter_number', 'author', 'chapter_title')
+    table_signed_chapters.column("#0", width=0, stretch='NO')
+    table_signed_chapters.column("story_title", width=150)
+    table_signed_chapters.column("chapter_number",width=150)
+    table_signed_chapters.column("author",width=150)
+    table_signed_chapters.column("chapter_title",width=150)
+    
+    table_signed_chapters.heading("#0",text="",)
+    table_signed_chapters.heading("story_title",text="Story title")
+    table_signed_chapters.heading("chapter_number",text="Chapter number")
+    table_signed_chapters.heading("author",text="Author")
+    table_signed_chapters.heading("chapter_title",text="Chapter title")
+    
+    for ind, signed_chapter in enumerate(signed_chapters_json):
+        val = (signed_chapter['story_title'], signed_chapter['chapter_number'],signed_chapter['author'],signed_chapter['chapter_title'])
+        table_signed_chapters.insert(parent='',index='end',iid=ind,text='', values = val)
+    
+    table_signed_chapters.grid(row = 3,column = 0, padx = 10, pady = 10)
+    
+    lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
+    ent_miner_name = tk.Entry(width = 50)
+    lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
+    ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
+    
+    but_start_mining.grid(row = 7, column = 0,padx = 10, pady = 10)
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
     #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
+    
+def run_mining(event):
+    print('placeholder')
     
 def open_check_window(event):
 
@@ -193,6 +234,8 @@ scroll_txt = scrolledtext.ScrolledText(master = fr_form, width = text_boxes_widt
 
 lbl_signed_chapter_data = tk.Label(text = 'If everything went well, your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
 
+but_start_mining = tk.Button(text = 'Start mining!')
+
 lbl_greeting.grid(row = 0, column = 1)
 but_sign_chapter.grid(row=1, column=0)
 but_mine_chapter.grid(row=1, column=1)
@@ -203,6 +246,8 @@ but_mine_chapter.bind("<Button-1>", open_mining_window)
 but_check_read.bind("<Button-1>", open_check_window)
     
 but_accept_entry.bind("<Button-1>", run_chapter_signature)
+
+but_start_mining.bind("<Button-1>", run_mining)
 
 window.mainloop()
 
