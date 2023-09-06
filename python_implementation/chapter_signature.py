@@ -10,145 +10,19 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 29/08/2023 Steven Mathey
+# 06/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
 import rsa
-import io
+#import io
 import sys
-import glob
-import numpy as np
-
-def check_chapter_data(chapter_data, genesis):
-    # This checks that the chapter to submit does not violate the rules given in the genesis block.
-    
-    test = True
-    for key in genesis['character_limits'].keys():
-        if len(chapter_data[key]) > genesis['character_limits'][key]:
-            print('The field '+key+' can only contain '+str(genesis['character_limits'][key])+' characters. '+ str(len(chapter_data[key])-genesis['character_limits'][key])+' characters must be removed before it can be added to the story.')
-            test = False
-            
-    if genesis.get('number_of_chapters',np.inf) < chapter_data['chapter_number']:
-        # Only test that the chapter number is not too large if the field is present in the genesis block.
-        print('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
-        test = False
-        
-    if genesis.get('story_title', chapter_data['story_title']) != chapter_data['story_title']:
-        print('The story title does not correspond to the one in the genesis block.')
-        test = False
-        
-    return test
-
-def import_json(file_name, stop_if_fail = True):
-
-    if file_name[-5:].lower() != '.json':
-        print('The file name ('+file_name+') must end with \'.json\'.')
-        if interrupt_run:
-            input('Press enter to end.')
-        sys.exit()
-        
-    try:
-        return json.load(open(file_name))
-    except:
-        if stop_if_fail:
-            if file_name in glob.glob('*.json'):
-                print('Something is wrong withe the *.json file.')
-                if interrupt_run:
-                    input('Press enter to end.')
-                sys.exit(0)
-            else:
-                print('Could not find '+file_name+'.')
-                if interrupt_run:
-                    input('Press enter to end.')
-                sys.exit(0)
-        else:
-            if file_name in glob.glob('*.json'):
-                print('Something is wrong withe the *.json file.')
-            else:
-                print('Could not find '+file_name+'.')
-            return {}
-
-def write_chapter_to_readable_file(chapter_data):
-    # This makes a readable text file with all the data provided by the author.
-    
-    to_write = [(k.replace('_',' ')+':').title() + ' ' + str(chapter_data[k])+'\n\n' for k in chapter_data.keys() if k!='text']
-    to_write.append('\n\n\n' + chapter_data['text'])
-    
-    file_name = (chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.txt')
-    
-    with open(file_name, "w") as outfile:
-        outfile.writelines(to_write)
-    
-    print('The chapter content was saved in an easily readable form in the working directory in '+file_name+'.')
-        
-def get_genesis_block(story_title):
-    # Get the genesis block. Use the validated blockchain file if available and default to the local file 'genesis_block.json' if not.
-    # With the validated blockchain, check the integrity of the genesis block and stop the script if the hash value does not match.
-    
-    story_title = story_title.title().replace(' ','')+'_'
-    files = glob.glob('*.json')
-    
-    files = [x for x in files if x.startswith(story_title)]
-    if len(files) == 0:
-        print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
-        return import_json('genesis_block.json', False)
-    
-    file_index = np.argmax(np.array([int(x[len(story_title):len(story_title)+3]) for x in files]))
-    file_name = files[file_index]
-
-    try:
-        blockchain = import_json(file_name, False)
-        if check_hash(blockchain['0']['hash'],blockchain['0']['block_content']):
-            print('Using the genesis block from \''+file_name+'\'.')
-            return blockchain['0']['block_content']
-
-    except:
-        print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
-        return import_json('genesis_block.json', False)
-    
-    print('The genesis block from this file has been tampered with. Don\'t use it.')
-    if interrupt_run:
-        input('Press enter to end.')
-    sys.exit()
-
-def write_signed_chapter_to_file(signed_chapter_data):
-    
-    chapter_data = signed_chapter_data['chapter_data']
-    signed_file_name = 'signed_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    with open(signed_file_name, "w") as outfile:
-        outfile.write(json.dumps(signed_chapter_data))
-        
-    print('The signed chapter data was saved in the working directory in '+signed_file_name+'.')
-
-def write_keys_to_file(public_key,private_key):
-    
-    public_key = public_key.save_pkcs1().hex()
-    private_key = private_key.save_pkcs1().hex()
-    keys = {'public_key': public_key, 'private_key': private_key}
-    keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    with open(keys_file_name, "w") as outfile:
-        outfile.write(json.dumps(keys))
-
-def check(statement,message):
-    # This function works like the assert statement, but does not raise an error. It just prints a message and terminates the script.
-    
-    if not(statement):
-        print(message)
-        if interrupt_run:
-            input('Press enter to end.')
-        sys.exit()
-        
-def check_hash(provided_hash,block_content):
-    computed_hash = rsa.compute_hash(json.dumps(block_content).encode('utf8'), 'SHA-256').hex()
-    
-    if computed_hash == provided_hash:
-        return True
-    return False
+#import glob
+#import numpy as np
+from blockchain_functons import *
 
 ################################# The program starts here ################################################
 
-interrupt_run = False
 # Get the chapter data
 if (len(sys.argv)  == 2):
     file_name = sys.argv[1]
@@ -166,8 +40,6 @@ else:
             chapter_data['text'] = infile.read()
     else:
         print('The file name must end with \'.txt\'.')
-        if interrupt_run:
-            input('Press enter to end.')
         sys.exit()
 
 genesis = get_genesis_block(chapter_data['story_title'])

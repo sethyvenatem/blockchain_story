@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 29/08/2023 Steven Mathey
+# 06/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -50,6 +50,9 @@ def check_chapter_data(chapter_data, genesis):
         # Only test that the chapter number is not too large if the field is present in the genesis block.
         print('This story can not have more than '+str(genesis['number_of_chapters'])+' chapters.')
         test = False
+    if genesis.get('story_title', chapter_data['story_title']) != chapter_data['story_title']:
+        print('The story title does not correspond to the one in the genesis block.')
+        test = False
     return test
 
 def validate_chapter_data(signed_chapter_data, genesis):
@@ -74,7 +77,6 @@ def import_json(file_name):
 
     if file_name[-5:].lower() != '.json':
         print('The file name ('+file_name+') must end with \'.json\'.')
-        input('Press enter to end.')
         sys.exit()
         
     try:
@@ -82,11 +84,9 @@ def import_json(file_name):
     except:
         if file_name in glob.glob('*.json'):
             print('Something is wrong withe the *.json file.')
-            input('Press enter to end.')
             sys.exit(0)
         else:
             print('Could not find '+file_name+'.')
-            input('Press enter to end.')
             sys.exit(0)
 
 def get_eth_block_info(target_date, retry = True):
@@ -131,7 +131,6 @@ def get_eth_block_info(target_date, retry = True):
                 return None
         else:
             print('Could not find ETH block.')
-            input('Press enter to end.')
             sys.exit(0)
         
     if w3.eth.get_block('finalized').number < target_block:
@@ -178,7 +177,6 @@ def check(statement,message):
     
     if not(statement):
         print(message)
-        input('Press enter to end.')
         sys.exit()
         
 def get_now():
@@ -209,7 +207,6 @@ if (len(sys.argv) == 3) or (len(sys.argv) == 2):
     file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000_'+genesis['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps({'0': genesis}))
-    input('Press enter to end.')
     sys.exit()
 
 check(len(sys.argv) == 4, str(len(sys.argv)-1)+' arguments provided. This is wrong.')
@@ -286,7 +283,7 @@ if send.lower() in ['y','yes']:
     #Add the file or files to the embed
     with open(new_file_name, 'rb') as f: 
         file_data = f.read() 
-    new_file_name = 'SPOILER_'+new_file_name
+    #new_file_name = 'SPOILER_'+new_file_name
     webhook.add_file(file_data, new_file_name)
     #Send the webhook
     response = webhook.execute()

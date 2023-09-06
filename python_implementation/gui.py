@@ -5,6 +5,9 @@ from  tkinter import ttk
 import json
 import os
 import glob
+import subprocess
+import sys
+import imp
 
 # use the json content to decide if it's a signed_chapter, validated story or something else.
 
@@ -99,7 +102,7 @@ def run_chapter_signature(event):
     scroll_sign_messages = scrolledtext.ScrolledText()
     for p in print_statements:
         scroll_sign_messages.insert("1.0", p+'\n')
-    lbl_signed_chapter_data.grid(row = 0, column = 0,sticky = 'n', padx=10)
+    lbl_signed_chapter_data.grid(row = 0, column = 0,sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0,sticky = 'n', padx=10)
     os.remove('temp_chapter_signature.txt')
     os.remove('temp_chapter_data.json')
@@ -111,7 +114,6 @@ def open_mining_window(event):
     but_mine_chapter.grid_forget()
     but_check_read.grid_forget()
     
-    lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")
     lbl_story_choice.grid(row = 0, column = 0, sticky = 'nw', padx = 10)
     
     json_files = glob.glob('*.json')    
@@ -129,8 +131,6 @@ def open_mining_window(event):
         temp = import_json(signed_chapter)
         temp = temp['chapter_data']
         signed_chapters_json.append(temp)
-
-    table_validated_chapters = ttk.Treeview()
     
     table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_age_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
@@ -154,7 +154,7 @@ def open_mining_window(event):
 #        tk.Checkbutton(text='').grid(row=1, column = 1, sticky='w')
         
     table_validated_chapters.grid(row = 1,column = 0, padx = 10, pady = 10)
-    
+
     def get_validated_story_file(a):
         # thanks: https://stackoverflow.com/questions/30614279/tkinter-treeview-get-selected-item-values
         curItem = table_validated_chapters.focus()
@@ -164,10 +164,7 @@ def open_mining_window(event):
 
     table_validated_chapters.bind('<ButtonRelease-1>', get_validated_story_file)
 
-    lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
     lbl_chapter_choice.grid(row = 2, column = 0, sticky = 'nw', padx = 10)
-    
-    table_signed_chapters = ttk.Treeview()
     
     table_signed_chapters['columns'] = ('story_title', 'chapter_number', 'author', 'chapter_title')
     table_signed_chapters.column("#0", width=0, stretch='NO')
@@ -195,12 +192,10 @@ def open_mining_window(event):
     
     table_signed_chapters.bind('<ButtonRelease-1>', get_signed_chapter_file)
     
-    lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
     lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
     ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
     
     but_start_mining.grid(row = 7, column = 0,padx = 10, pady = 10)
-    
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
     #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
@@ -209,7 +204,32 @@ def run_mining(event):
     
     miner_name = ent_miner_name.get()
     
-    print('python3 mining.py '+validated_story_file + ' ' + signed_chapter_file + ' ' + miner_name)
+    but_start_mining.grid_forget()
+    ent_miner_name.grid_forget()
+    lbl_miner_name.grid_forget()
+    table_signed_chapters.grid_forget()
+    lbl_chapter_choice.grid_forget()
+    table_validated_chapters.grid_forget()
+    lbl_story_choice.grid_forget()
+    
+    #module = 
+    imp.load_source('mining.py', [validated_story_file,signed_chapter_file,miner_name])
+    
+#    os.system('python3 mining.py '+validated_story_file + ' ' + signed_chapter_file + ' ' + miner_name + ' > temp_chapter_mining.txt')
+    #result = subprocess.run(['python','mining.py',validated_story_file,signed_chapter_file,miner_name], shell=False, capture_output=True, text=True)
+    #print(result)
+    #print(result.stdout)
+    
+    with open('temp_chapter_mining.txt') as file:
+        print_statements = file.readlines()
+    
+    scroll_sign_messages = scrolledtext.ScrolledText()
+    for p in print_statements:
+        scroll_sign_messages.insert("1.0", p+'\n')
+    lbl_mined_chapter = tk.Label(text = 'If everything went well, your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
+    lbl_mined_chapter.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
+    scroll_sign_messages.grid(row = 2, column = 0, sticky = 'n', padx=10)
+    os.remove('temp_chapter_mining.txt')
     
 def open_check_window(event):
 
@@ -249,7 +269,8 @@ scroll_txt = scrolledtext.ScrolledText(master = fr_form, width = text_boxes_widt
 
 lbl_signed_chapter_data = tk.Label(text = 'If everything went well, your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
 
-but_start_mining = tk.Button(text = 'Start mining!')
+lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
+but_start_mining = tk.Button(text = 'Start mining! This will take some time. Be patient.')
 
 lbl_greeting.grid(row = 0, column = 1)
 but_sign_chapter.grid(row=1, column=0)
@@ -263,8 +284,11 @@ but_check_read.bind("<Button-1>", open_check_window)
 but_accept_entry.bind("<Button-1>", run_chapter_signature)
 
 but_start_mining.bind("<Button-1>", run_mining)
-
+table_signed_chapters = ttk.Treeview()
 ent_miner_name = tk.Entry(width = 50)
+lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
+table_validated_chapters = ttk.Treeview()
+lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")
 
 window.mainloop()
 
