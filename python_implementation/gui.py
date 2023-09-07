@@ -7,7 +7,11 @@ import os
 import glob
 import subprocess
 import sys
-import imp
+#import imp
+
+from io import StringIO
+
+from chapter_signature import *
 
 # use the json content to decide if it's a signed_chapter, validated story or something else.
 
@@ -76,9 +80,18 @@ def run_chapter_signature(event):
     
     with open('temp_chapter_data.json', "w") as outfile:
         outfile.write(json.dumps(chapter_data))
-    
-    os.system('python3 chapter_signature.py temp_chapter_data.json > temp_chapter_signature.txt')
-    
+
+https://stackoverflow.com/questions/5884517/how-to-assign-print-output-to-a-variable
+the code stops because it encounters sys.exit() in sign_chapter()
+#    old_stdout = sys.stdout
+#    result = StringIO()
+#    sys.stdout = result
+#    os.system('python3 chapter_signature.py temp_chapter_data.json > temp_chapter_signature.txt')
+    sign_chapter('temp_chapter_data.json')
+#    result_string = result.getvalue()
+#    sys.stdout = old_stdout
+
+#    print(result_string)
     lbl_sign_greeting.grid_forget()
     lbl_story_title.grid_forget()
     lbl_chapter_number.grid_forget()
@@ -96,15 +109,16 @@ def run_chapter_signature(event):
     fr_form.grid_forget()
     fr_accept.grid_forget()
     
-    with open('temp_chapter_signature.txt') as file:
-        print_statements = file.readlines()
+#    with open('temp_chapter_signature.txt') as file:
+#        print_statements = file.readlines()
     
     scroll_sign_messages = scrolledtext.ScrolledText()
-    for p in print_statements:
-        scroll_sign_messages.insert("1.0", p+'\n')
+ #   for p in print_statements:
+ #       scroll_sign_messages.insert("1.0", p+'\n')
+    scroll_sign_messages.insert("1.0", result_string)
     lbl_signed_chapter_data.grid(row = 0, column = 0,sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0,sticky = 'n', padx=10)
-    os.remove('temp_chapter_signature.txt')
+#    os.remove('temp_chapter_signature.txt')
     os.remove('temp_chapter_data.json')
     
 def open_mining_window(event):
