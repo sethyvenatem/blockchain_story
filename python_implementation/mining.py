@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 07/09/2023 Steven Mathey
+# 08/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -71,105 +71,136 @@ def set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, min
         # Just right.
         new_block['difficulty'] = difficulty
     return new_block
+
+def mine_chapter(story_file, chapter_file, miner_name, send = None):
     
-################################# The program starts here ################################################
+    if chapter_file == None:
+        print('2 arguments provided, this validates the genesis block.')
+        genesis = import_json(story_file)
+        if genesis == 'error':
+            return 'error'
+        test = check('intended_mining_time_days' in genesis.keys(), 'The provided file is not a valid genesis block.')
+        if test == 'error':
+            return 'error'
+        if 'difficulty' not in genesis.keys():
+            genesis['difficulty'] = estimate_difficulty(genesis['intended_mining_time_days'])
+        if 'miner_name' not in genesis.keys():
+            genesis['miner_name'] = miner_name
+        genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
+        genesis = {'block_content': genesis.copy()}
+        genesis['hash'] = genesis_hash
+        file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000_'+genesis['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
+        with open(file_name, "w") as outfile:
+            outfile.write(json.dumps({'0': genesis}))
+        return 'success'
 
-if (len(sys.argv) == 3) or (len(sys.argv) == 2):
-    # The input is the genesis block without its hash value.
-    print('2 arguments provided, this validates the genesis block.')
-    genesis = import_json(sys.argv[1])
-    check('intended_mining_time_days' in genesis.keys(), 'The provided file is not a valid genesis block.')
-    if 'difficulty' not in genesis.keys():
-        genesis['difficulty'] = estimate_difficulty(genesis['intended_mining_time_days'])
-    if 'miner_name' not in genesis.keys():
-        miner_name = sys.argv[2]
-        genesis['miner_name'] = miner_name
-    genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
-    genesis = {'block_content': genesis.copy()}
-    genesis['hash'] = genesis_hash
-    file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000_'+genesis['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
-    with open(file_name, "w") as outfile:
-        outfile.write(json.dumps({'0': genesis}))
-    sys.exit()
+    # Import the data to validate
+    story = import_json(story_file)
+    if story == 'error':
+        return 'error'
+    signed_chapter_data = import_json(chapter_file)
+    if signed_chapter_data == 'error':
+        return 'error'
 
-check(len(sys.argv) == 4, str(len(sys.argv)-1)+' arguments provided. This is wrong.')
+    # Check that the chapter data is valid.
+    genesis = story['0']['block_content']
+    test = check(validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.')
+    if test == 'error':
+        return 'error'
 
-# Import the data to validate
-story = import_json(sys.argv[1])
-signed_chapter_data = import_json(sys.argv[2])
-miner_name = sys.argv[3]
+    # Check that the number of the provided chapter is one plus the largest block number and extract the previous block.
+    test = check(signed_chapter_data['chapter_data']['chapter_number']-1 == max([int(n) for n in story.keys()]), 'The chapter number of the block to add is not the last chapter number of the story.')
+    if test == 'error':
+        return 'error'
+    previous_block = story[str(signed_chapter_data['chapter_data']['chapter_number']-1)]
 
-# Check that the chapter data is valid.
-genesis = story['0']['block_content']
-check(validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.')
+    # Get the mining date of the previous block and check that it is far enough in the past.
+    mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
+    story_age_previous_block = previous_block['block_content']['story_age_seconds']
+    mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
+    test = check(mining_date_previous_block + mining_delay <= get_now(), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - get_now()) + '.')
+    if test == 'error':
+        return 'error'
 
-# Check that the number of the provided chapter is one plus the largest block number and extract the previous block.
-check(signed_chapter_data['chapter_data']['chapter_number']-1 == max([int(n) for n in story.keys()]), 'The chapter number of the block to add is not the last chapter number of the story.')
-previous_block = story[str(signed_chapter_data['chapter_data']['chapter_number']-1)]
+    # Initialise the new block
+    new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay), 'miner_name': miner_name}
+    if new_block['hash_eth'] == 'error':
+        return 'error'
 
-# Get the mining date of the previous block and check that it is far enough in the past.
-mining_date_previous_block = pytz.utc.localize(dt.datetime.strptime(previous_block['block_content']['mining_date'], '%Y/%m/%d %H:%M:%S'))
-story_age_previous_block = previous_block['block_content']['story_age_seconds']
-mining_delay = dt.timedelta(days = genesis['mining_delay_days'])
-check(mining_date_previous_block + mining_delay <= get_now(), 'The previous block was mined on the ' + mining_date_previous_block.strftime("%Y/%m/%d, %H:%M:%S")+'. This is less than ' + str(genesis['mining_delay_days']) + ' days ago. This block can\'t be validated right now. Please wait ' + str(mining_date_previous_block + mining_delay - get_now()) + '.')
-
-# Initialise the new block
-new_block = {'signed_chapter_data': signed_chapter_data, 'hash_previous_block': previous_block['hash'], 'hash_eth': get_eth_block_info(mining_date_previous_block + mining_delay), 'miner_name': miner_name}
-
-# Now perform the actual mining!
-# It takes about (2)**difficulty tries to find a valid nonce. On my computer, it takes about 0.0001 seconds for each try. difficulty = 23 should take about 10 minutes.
-difficulty = previous_block['block_content']['difficulty']
-new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
-# Set the hash value below which the block hash has to be. Use powers of 2 so that the difficulty is doubled as difficulty increases by 1.
-max_hash = 2**(256-difficulty)-1
-print('Start mining (at '+ dt.datetime.strftime(get_now(), '%Y/%m/%d %H:%M:%S')+' UTC)! On my computer, it takes about '+str(round(time_to_mine_days(difficulty)*24,3))+' hours to complete.')
-nb_tries = 1
-start_time = pytz.utc.localize(dt.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
-new_block['nb_tries'] = nb_tries
-new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
-new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
-while int.from_bytes(new_hash,'big') > max_hash:
-    nb_tries += 1
+    # Now perform the actual mining!
+    # It takes about (2)**difficulty tries to find a valid nonce. On my computer, it takes about 0.0001 seconds for each try. difficulty = 23 should take about 10 minutes.
+    difficulty = previous_block['block_content']['difficulty']
     new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
+    # Set the hash value below which the block hash has to be. Use powers of 2 so that the difficulty is doubled as difficulty increases by 1.
+    max_hash = 2**(256-difficulty)-1
+    print('Start mining (at '+ dt.datetime.strftime(get_now(), '%Y/%m/%d %H:%M:%S')+' UTC)! On my computer, it takes about '+str(round(time_to_mine_days(difficulty)*24,3))+' hours to complete.')
+    nb_tries = 1
+    start_time = pytz.utc.localize(dt.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
     new_block['nb_tries'] = nb_tries
     new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
     new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
-                           
-try_time = get_now()-start_time
-print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tries,'per try.')
-new_block = {'block_content': new_block.copy()}
-new_block['hash'] = new_hash.hex()
-story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
-new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'_'+new_block['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
+    while int.from_bytes(new_hash,'big') > max_hash:
+        nb_tries += 1
+        new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
+        new_block['nb_tries'] = nb_tries
+        new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
+        new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
 
-with open(new_file_name, "w") as outfile:
-    outfile.write(json.dumps(story))
-print('The newly validated story was saved in the working directory in '+new_file_name+'.')
-    
-send = input('Hurray, you validated a new block! Do you want to send it automatically to the discord server (y/n)?')
-if send.lower() in ['y','yes']:
-    # Thanks! https://www.reddit.com/r/Discord_Bots/comments/iirmzy/how_to_send_files_using_discord_webhooks_python/
-    #Replace the webhook URL with your own
-    webhook_url = 'https://discord.com/api/webhooks/1138436079448498176/ErxoQ7gHxjoowu5BNyxxhg9bUGkqK6CtkZzk9xjRoOs2MjyaLpoQkwq_njmhPyYltxIH'
-    #Create a Discord webhook object
-    webhook = DiscordWebhook(url=webhook_url)
-    #Create a Discord embed object
-    embed = DiscordEmbed()
-    #Set the title and description of the embed
-    embed.set_title('Miner '+miner_name+' validated a new chapter!')
-    embed.set_description(new_file_name)
-    #Add the embed to the webhook
-    webhook.add_embed(embed)
-    response = webhook.execute()
-    
-    webhook = DiscordWebhook(url=webhook_url)
-    #Add the file or files to the embed
-    with open(new_file_name, 'rb') as f: 
-        file_data = f.read() 
-    #new_file_name = 'SPOILER_'+new_file_name
-    webhook.add_file(file_data, new_file_name)
-    #Send the webhook
-    response = webhook.execute()
-else:
-    print('Your newly validated story was not sent to the discord server!')
-    print('Quickly, upload it manually at https://discord.gg/wD8zs75tck')
+    try_time = get_now()-start_time
+    print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tries,'per try.')
+    new_block = {'block_content': new_block.copy()}
+    new_block['hash'] = new_hash.hex()
+    story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
+    new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'_'+new_block['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
+
+    with open(new_file_name, "w") as outfile:
+        outfile.write(json.dumps(story))
+    print('The newly validated story was saved in the working directory in '+new_file_name+'.')
+
+    if send == None:
+        send = input('Hurray, you validated a new block! Do you want to send it automatically to the discord server (y/n)?')
+    if send.lower() in ['y','yes']:
+        # Thanks! https://www.reddit.com/r/Discord_Bots/comments/iirmzy/how_to_send_files_using_discord_webhooks_python/
+        #Replace the webhook URL with your own
+        webhook_url = 'https://discord.com/api/webhooks/1138436079448498176/ErxoQ7gHxjoowu5BNyxxhg9bUGkqK6CtkZzk9xjRoOs2MjyaLpoQkwq_njmhPyYltxIH'
+        #Create a Discord webhook object
+        webhook = DiscordWebhook(url=webhook_url)
+        #Create a Discord embed object
+        embed = DiscordEmbed()
+        #Set the title and description of the embed
+        embed.set_title('Miner '+miner_name+' validated a new chapter!')
+        embed.set_description(new_file_name)
+        #Add the embed to the webhook
+        webhook.add_embed(embed)
+        response = webhook.execute()
+
+        webhook = DiscordWebhook(url=webhook_url)
+        #Add the file or files to the embed
+        with open(new_file_name, 'rb') as f: 
+            file_data = f.read() 
+        #new_file_name = 'SPOILER_'+new_file_name
+        webhook.add_file(file_data, new_file_name)
+        #Send the webhook
+        response = webhook.execute()
+    else:
+        print('Your newly validated story was not sent to the discord server!')
+        print('Quickly, upload it manually at https://discord.gg/wD8zs75tck')
+        
+################################# The program starts here ################################################
+
+if __name__ == "__main__":
+    if (len(sys.argv) == 3) or (len(sys.argv) == 2):
+        genesis_file = sys.argv[1]
+        genesis = import_json(genesis_file)
+        if 'miner_name' not in genesis.keys():
+            miner_name = sys.argv[2]
+        else:
+            miner_name = genesis['miner_name']
+        status = mine_chapter(genesis_file_name, None, miner_name)
+        print(status)
+    else:
+        story_file = sys.argv[1]
+        signed_chapter_file = sys.argv[2]
+        miner_name = sys.argv[3]
+        status = mine_chapter(story_file, signed_chapter_file, miner_name)
+        print(status)

@@ -1,42 +1,27 @@
-#from tkinter import *
+# -----------------------------------------------------------
+# Graphical user interface for the 3 blockchain functionalities
+#
+# 07/09/2023 Steven Mathey
+# email steven.mathey@gmail.ch
+# -----------------------------------------------------------
+
 import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
-from  tkinter import ttk
+from tkinter import ttk
 import json
-import os
+#import os
 import glob
-import subprocess
+#import subprocess
 import sys
-#import imp
 
 from io import StringIO
 
 from chapter_signature import *
+from mining import *
+from checks import *
+from blockchain_functions import *
 
 # use the json content to decide if it's a signed_chapter, validated story or something else.
-
-def import_json(file_name, stop_if_fail = True):
-
-    if file_name[-5:].lower() != '.json':
-        print('The file name ('+file_name+') must end with \'.json\'.')
-        sys.exit()
-        
-    try:
-        return json.load(open(file_name))
-    except:
-        if stop_if_fail:
-            if file_name in glob.glob('*.json'):
-                print('Something is wrong withe the *.json file.')
-                sys.exit(0)
-            else:
-                print('Could not find '+file_name+'.')
-                sys.exit(0)
-        else:
-            if file_name in glob.glob('*.json'):
-                print('Something is wrong withe the *.json file.')
-            else:
-                print('Could not find '+file_name+'.')
-            return {}
 
 def open_chapter_signature_window(event):
     
@@ -81,17 +66,17 @@ def run_chapter_signature(event):
     with open('temp_chapter_data.json', "w") as outfile:
         outfile.write(json.dumps(chapter_data))
 
-https://stackoverflow.com/questions/5884517/how-to-assign-print-output-to-a-variable
-the code stops because it encounters sys.exit() in sign_chapter()
-#    old_stdout = sys.stdout
-#    result = StringIO()
-#    sys.stdout = result
-#    os.system('python3 chapter_signature.py temp_chapter_data.json > temp_chapter_signature.txt')
-    sign_chapter('temp_chapter_data.json')
-#    result_string = result.getvalue()
-#    sys.stdout = old_stdout
+    #thanks! https://stackoverflow.com/questions/5884517/how-to-assign-print-output-to-a-variable
+    old_stdout = sys.stdout
+    result = StringIO()
+    sys.stdout = result
+    status = sign_chapter('temp_chapter_data.json')
+    result_string = result.getvalue()
+    sys.stdout = old_stdout
+    
+    if status == 'error':
+        lbl_signed_chapter_data.config(text = 'Oups, something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
 
-#    print(result_string)
     lbl_sign_greeting.grid_forget()
     lbl_story_title.grid_forget()
     lbl_chapter_number.grid_forget()
@@ -109,16 +94,10 @@ the code stops because it encounters sys.exit() in sign_chapter()
     fr_form.grid_forget()
     fr_accept.grid_forget()
     
-#    with open('temp_chapter_signature.txt') as file:
-#        print_statements = file.readlines()
-    
     scroll_sign_messages = scrolledtext.ScrolledText()
- #   for p in print_statements:
- #       scroll_sign_messages.insert("1.0", p+'\n')
     scroll_sign_messages.insert("1.0", result_string)
     lbl_signed_chapter_data.grid(row = 0, column = 0,sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0,sticky = 'n', padx=10)
-#    os.remove('temp_chapter_signature.txt')
     os.remove('temp_chapter_data.json')
     
 def open_mining_window(event):
@@ -138,13 +117,15 @@ def open_mining_window(event):
     validated_stories_json = []
     for validated_story in validated_stories:
         temp = import_json(validated_story)
-        temp = temp[str(max([int(b) for b in temp.keys()]))]['block_content']
-        validated_stories_json.append(temp)
+        if temp != 'error':
+            temp = temp[str(max([int(b) for b in temp.keys()]))]['block_content']
+            validated_stories_json.append(temp)
     signed_chapters_json = []
     for signed_chapter in signed_chapters:
         temp = import_json(signed_chapter)
-        temp = temp['chapter_data']
-        signed_chapters_json.append(temp)
+        if temp != 'error':
+            temp = temp['chapter_data']
+            signed_chapters_json.append(temp)
     
     table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_age_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
@@ -209,7 +190,8 @@ def open_mining_window(event):
     lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
     ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
     
-    but_start_mining.grid(row = 7, column = 0,padx = 10, pady = 10)
+    check_send_to_discord.grid(row = 7,column = 0, padx = 10, pady = 10)
+    but_start_mining.grid(row = 8, column = 0,padx = 10, pady = 10)
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
     #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
@@ -217,7 +199,11 @@ def open_mining_window(event):
 def run_mining(event):
     
     miner_name = ent_miner_name.get()
-    
+    send = var1.get()
+    if send:
+        send = 'yes'
+    else:
+        send = 'no'
     but_start_mining.grid_forget()
     ent_miner_name.grid_forget()
     lbl_miner_name.grid_forget()
@@ -225,25 +211,23 @@ def run_mining(event):
     lbl_chapter_choice.grid_forget()
     table_validated_chapters.grid_forget()
     lbl_story_choice.grid_forget()
+    check_send_to_discord.grid_forget()
     
-    #module = 
-    imp.load_source('mining.py', [validated_story_file,signed_chapter_file,miner_name])
-    
-#    os.system('python3 mining.py '+validated_story_file + ' ' + signed_chapter_file + ' ' + miner_name + ' > temp_chapter_mining.txt')
-    #result = subprocess.run(['python','mining.py',validated_story_file,signed_chapter_file,miner_name], shell=False, capture_output=True, text=True)
-    #print(result)
-    #print(result.stdout)
-    
-    with open('temp_chapter_mining.txt') as file:
-        print_statements = file.readlines()
+    old_stdout = sys.stdout
+    result = StringIO()
+    sys.stdout = result
+    status = mine_chapter(validated_story_file, signed_chapter_file, miner_name, send = send)
+    result_string = result.getvalue()
+    sys.stdout = old_stdout
     
     scroll_sign_messages = scrolledtext.ScrolledText()
-    for p in print_statements:
-        scroll_sign_messages.insert("1.0", p+'\n')
-    lbl_mined_chapter = tk.Label(text = 'If everything went well, your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
+    scroll_sign_messages.insert("1.0", result_string)
+    if status == 'error':
+        lbl_mined_chapter = tk.Label(text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
+    else:
+        lbl_mined_chapter = tk.Label(text = 'Your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
     lbl_mined_chapter.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 2, column = 0, sticky = 'n', padx=10)
-    os.remove('temp_chapter_mining.txt')
     
 def open_check_window(event):
 
@@ -255,6 +239,11 @@ def open_check_window(event):
     lbl_check_greeting = tk.Label(text="Select a file to check and view.")
     lbl_check_greeting.grid(row = 0, column = 1)
 
+def run_checks(event):
+    
+    status = check_file(file_name)
+    
+    
 window = tk.Tk()
 lbl_greeting = tk.Label(text="What do you want to do?")
 but_sign_chapter = tk.Button(text = 'Digiatlly sign a chapter')
@@ -281,7 +270,7 @@ but_accept_entry = tk.Button(master = fr_accept, text = 'Sign it!')
 # thanks https://stackoverflow.com/questions/13832720/how-to-attach-a-scrollbar-to-a-text-widget
 scroll_txt = scrolledtext.ScrolledText(master = fr_form, width = text_boxes_widths, height = text_boxes_widths)
 
-lbl_signed_chapter_data = tk.Label(text = 'If everything went well, your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
+lbl_signed_chapter_data = tk.Label(text = 'Your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
 
 lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
 but_start_mining = tk.Button(text = 'Start mining! This will take some time. Be patient.')
@@ -300,6 +289,8 @@ but_accept_entry.bind("<Button-1>", run_chapter_signature)
 but_start_mining.bind("<Button-1>", run_mining)
 table_signed_chapters = ttk.Treeview()
 ent_miner_name = tk.Entry(width = 50)
+var1 = tk.IntVar()
+check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server", variable=var1)
 lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
 table_validated_chapters = ttk.Treeview()
 lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")

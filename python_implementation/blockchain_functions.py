@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # List of functions used by the other scripts
 #
-# 07/09/2023 Steven Mathey
+# 08/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -39,7 +39,8 @@ def import_json(file_name, stop_if_fail = True):
 
     if file_name[-5:].lower() != '.json':
         print('The file name ('+file_name+') must end with \'.json\'.')
-        sys.exit()
+        return 'error'
+        #sys.exit()
         
     try:
         return json.load(open(file_name))
@@ -47,10 +48,12 @@ def import_json(file_name, stop_if_fail = True):
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
-                sys.exit(0)
+                return 'error'
+                #sys.exit(0)
             else:
                 print('Could not find '+file_name+'.')
-                sys.exit(0)
+                return 'error'
+                #sys.exit(0)
         else:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
@@ -97,7 +100,8 @@ def get_genesis_block(story_title):
         return import_json('genesis_block.json', False)
     
     print('The genesis block from this file has been tampered with. Don\'t use it.')
-    sys.exit()
+    return 'error'
+    #sys.exit()
 
 def write_signed_chapter_to_file(signed_chapter_data):
     
@@ -122,7 +126,8 @@ def check(statement,message):
     
     if not(statement):
         print(message)
-        sys.exit()
+        return 'error'
+        #sys.exit()
         
 def check_hash(provided_hash,block_content):
     computed_hash = rsa.compute_hash(json.dumps(block_content).encode('utf8'), 'SHA-256').hex()
@@ -191,7 +196,8 @@ def get_eth_block_info(target_date, retry = True):
                 return None
         else:
             print('Could not find ETH block.')
-            sys.exit(0)
+            return 'error'
+            #sys.exit(0)
         
     if w3.eth.get_block('finalized').number < target_block:
         # If the obtained block number is larger than the last finalised block number, then warn the user.

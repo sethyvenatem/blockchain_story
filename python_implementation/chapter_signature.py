@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 06/09/2023 Steven Mathey
+# 08/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -28,6 +28,8 @@ def sign_chapter(file_name):
     if type(file_name) == str:
 #        file_name = sys.argv[1]
         chapter_data = import_json(file_name)
+        if chapter_data == 'error':
+            return 'error'
     else:
         print('Please provide the chapter data.')
         chapter_data = {}
@@ -41,12 +43,17 @@ def sign_chapter(file_name):
                 chapter_data['text'] = infile.read()
         else:
             print('The file name must end with \'.txt\'.')
-            sys.exit()
+            return 'error'
+            #sys.exit()
 
     genesis = get_genesis_block(chapter_data['story_title'])
+    if genesis == 'error':
+        return 'error'
 
     # Check that the chapter fits the constraints
-    check(check_chapter_data(chapter_data, genesis),'The chapter data does not comply with the rules of this story.')
+    test = check(check_chapter_data(chapter_data, genesis),'The chapter data does not comply with the rules of this story.')
+    if test == 'error':
+        return 'error'
 
     # Generate public and private keys
     (public_key, private_key) = rsa.newkeys(1024)
