@@ -109,9 +109,13 @@ def open_mining_window(event):
     
     lbl_story_choice.grid(row = 0, column = 0, sticky = 'nw', padx = 10)
     
-    json_files = glob.glob('*.json')    
-    validated_stories = sorted([f for f in json_files if not(f.startswith('signed_')) and not(f.startswith('keys_')) and not(f.startswith('chapter_data')) and not(f.startswith('genesis_block'))])
-    signed_chapters = sorted([f for f in json_files if f.startswith('signed_')])
+    json_files = glob.glob('*.json')
+    
+    validated_stories = sorted([f for f in json_files if all([x.isdigit() for x in import_json(f).keys()])])
+    validated_stories.reverse()
+    
+    signed_chapters = sorted([f for f in json_files if set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(import_json(f).keys())])
+    signed_chapters.reverse()
     
     # Import all the available signed chapters and validated stories
     validated_stories_json = []
@@ -226,8 +230,8 @@ def run_mining(event):
         lbl_mined_chapter = tk.Label(text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
     else:
         lbl_mined_chapter = tk.Label(text = 'Your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
-    lbl_mined_chapter.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
-    scroll_sign_messages.grid(row = 2, column = 0, sticky = 'n', padx=10)
+    lbl_mined_chapter.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
+    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10)
     
 def open_check_window(event):
 
@@ -236,12 +240,89 @@ def open_check_window(event):
     but_mine_chapter.grid_forget()
     but_check_read.grid_forget()
     
-    lbl_check_greeting = tk.Label(text="Select a file to check and view.")
-    lbl_check_greeting.grid(row = 0, column = 1)
+    lbl_check_greeting = tk.Label(text="Select a file to check and then view.")
+    lbl_check_greeting.grid(row = 0, column = 0, padx = 10, pady = 10)
+    
+    file_names = sorted(glob.glob('*.json'))
+    file_names.reverse()
+    json_files = [import_json(f) for f in file_names]
+    
+    table_to_check['columns'] = ('file_type', 'story_title', 'chapter_number', 'chapter_title', 'author')
+    table_to_check.column("#0", width=0, stretch='NO')
+    table_to_check.column("file_type", width=150)
+    table_to_check.column("story_title",width=150)
+    table_to_check.column("chapter_number",width=150)
+    table_to_check.column("chapter_title",width=150)
+    table_to_check.column("author",width=150)
+    
+    table_to_check.heading("#0",text="",)
+    table_to_check.heading("file_type",text="File type")
+    table_to_check.heading("story_title",text="Story title")
+    table_to_check.heading("chapter_number",text="(Last) chapter number")
+    table_to_check.heading("chapter_title",text="(Last) chapter title")
+    table_to_check.heading("author",text="Author")
+    
+    for ind, file in enumerate(json_files):
+        if set(['story_title', 'chapter_number', 'author', 'chapter_title', 'text']) == set(file.keys()):
+            val = ('un-signed chapter',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])        
+        elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(file.keys()):
+            val = ('signed chapter',file['chapter_data']['story_title'],file['chapter_data']['chapter_number'],file['chapter_data']['chapter_title'],file['chapter_data']['author'])
+        elif set(['block_content', 'hash']) == set(file.keys()):
+            if 'signed_chapter_data' in file['block_content'].keys():
+                file = file['block_content']['signed_chapter_data']
+                val = ('validated block (isolated)',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
+            else:
+                file = file['block_content']
+                val = ('validated genesis block (isolated)',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
+        elif all([x.isdigit() for x in file.keys()]):
+            
+            largest_block_nb = str(max([int(k) for k in file.keys()]))
+            if largest_block_nb == '0':
+                file = file['0']['block_content']
+                val = ('validated genesis block',file['story_title'],file['chapter_number'], 'no title',file['author'])
+            else:
+                file = file[largest_block_nb]['block_content']['signed_chapter_data']['chapter_data']
+                val = ('validated story',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
+        else:
+            val = ('unrecognised file','no title','no number', 'no title', 'no author')
+            
+        table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
+    
+    def get_file_to_check(a):
+        curItem = table_to_check.focus()
+        global file_to_check
+        file_to_check = file_names[int(curItem)]
+    
+    table_to_check.bind('<ButtonRelease-1>', get_file_to_check)
+    
+    table_to_check.grid(row = 1, column = 0, padx = 10, pady = 10)
+    but_check_file.grid(row = 2, column = 0, padx = 10, pady = 10)
 
 def run_checks(event):
     
-    status = check_file(file_name)
+    lbl_check_greeting.grid_forget()
+    table_to_check.grid_forget()
+    but_check_file.grid_forget()
+    
+    old_stdout = sys.stdout
+    result = StringIO()
+    sys.stdout = result
+    status = check_file(file_to_check)
+    result_string = result.getvalue()
+    sys.stdout = old_stdout
+    
+    scroll_sign_messages = scrolledtext.ScrolledText()
+    scroll_sign_messages.insert("1.0", result_string)
+    if status == 'error':
+        lbl_checked_file = tk.Label(text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
+    else:
+        lbl_checked_file = tk.Label(text = 'Your file has been checked!\nSee the text below for a description of what happened.')
+        lbl_display_text = tk.Label(text = 'You can read the text contained in the file that you checked below.\nClose this window when you are finished.')
+    lbl_checked_file.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
+    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10)
+    lbl_display_text.grid(row = 2, column = 0, sticky = 'n', padx=10)
+    
+    
     
     
 window = tk.Tk()
@@ -295,6 +376,9 @@ lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the stor
 table_validated_chapters = ttk.Treeview()
 lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")
 
+table_to_check = ttk.Treeview()
+but_check_file = tk.Button(text = 'Check the selected file.')
+but_check_file.bind("<Button-1>", run_checks)
 window.mainloop()
 
 # https://realpython.com/python-gui-tkinter/

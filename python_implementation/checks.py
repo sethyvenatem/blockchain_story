@@ -30,7 +30,7 @@ def get_difficulty(genesis, block, previous_block):
         return previous_block['difficulty'] + 1
     return previous_block['difficulty']
 
-def check_file(file_name)
+def check_file(file_name):
 
     data = import_json(file_name)
     if data == 'error':
