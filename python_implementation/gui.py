@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Graphical user interface for the 3 blockchain functionalities
 #
-# 07/09/2023 Steven Mathey
+# 12/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -63,8 +63,8 @@ def run_chapter_signature(event):
                     'chapter_title': chapter_title,
                     'text': text}
     
-    with open('temp_chapter_data.json', "w") as outfile:
-        outfile.write(json.dumps(chapter_data))
+    with open('temp_chapter_data.json', "w", encoding='utf-8') as outfile:
+        json.dump(chapter_data, outfile, ensure_ascii = False, sort_keys = True)
 
     #thanks! https://stackoverflow.com/questions/5884517/how-to-assign-print-output-to-a-variable
     old_stdout = sys.stdout
@@ -240,7 +240,6 @@ def open_check_window(event):
     but_mine_chapter.grid_forget()
     but_check_read.grid_forget()
     
-    lbl_check_greeting = tk.Label(text="Select a file to check and then view.")
     lbl_check_greeting.grid(row = 0, column = 0, padx = 10, pady = 10)
     
     file_names = sorted(glob.glob('*.json'))
@@ -315,15 +314,20 @@ def run_checks(event):
     scroll_sign_messages.insert("1.0", result_string)
     if status == 'error':
         lbl_checked_file = tk.Label(text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
+    elif status == 'check_genesis':
+        lbl_checked_file = tk.Label(text = 'Your file has been checked!\nSee the text below for a description of what happened.')
     else:
+        with open(status) as f:
+            chapter_text = f.read()
+        scroll_chapter_text = scrolledtext.ScrolledText()
+        scroll_chapter_text.insert("1.0", chapter_text)
         lbl_checked_file = tk.Label(text = 'Your file has been checked!\nSee the text below for a description of what happened.')
         lbl_display_text = tk.Label(text = 'You can read the text contained in the file that you checked below.\nClose this window when you are finished.')
+        lbl_display_text.grid(row = 2, column = 0, sticky = 'n', padx=10)
+        scroll_chapter_text.grid(row = 3, column = 0, sticky = 'n', padx=10)
+        
     lbl_checked_file.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10)
-    lbl_display_text.grid(row = 2, column = 0, sticky = 'n', padx=10)
-    
-    
-    
     
 window = tk.Tk()
 lbl_greeting = tk.Label(text="What do you want to do?")
@@ -375,7 +379,7 @@ check_send_to_discord = tk.Checkbutton(text="Automatically send the validated fi
 lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
 table_validated_chapters = ttk.Treeview()
 lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")
-
+lbl_check_greeting = tk.Label(text="Select a file to check and then view.")
 table_to_check = ttk.Treeview()
 but_check_file = tk.Button(text = 'Check the selected file.')
 but_check_file.bind("<Button-1>", run_checks)

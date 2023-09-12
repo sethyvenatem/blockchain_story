@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 08/09/2023 Steven Mathey
+# 12/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -86,12 +86,12 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
             genesis['difficulty'] = estimate_difficulty(genesis['intended_mining_time_days'])
         if 'miner_name' not in genesis.keys():
             genesis['miner_name'] = miner_name
-        genesis_hash = rsa.compute_hash(json.dumps(genesis).encode('utf8'), 'SHA-256').hex()
+        genesis_hash = rsa.compute_hash(json.dumps(genesis, sort_keys = True, ensure_ascii = False).encode('utf8'), 'SHA-256').hex()
         genesis = {'block_content': genesis.copy()}
         genesis['hash'] = genesis_hash
         file_name = genesis['block_content']['story_title'].title().replace(' ','')+'_000_'+genesis['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
-        with open(file_name, "w") as outfile:
-            outfile.write(json.dumps({'0': genesis}))
+        with open(file_name, "w", encoding='utf8') as outfile:
+            json.dump({'0': genesis}, outfile, sort_keys = True, ensure_ascii = False)
         return 'success'
 
     # Import the data to validate
@@ -138,13 +138,13 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
     start_time = pytz.utc.localize(dt.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
     new_block['nb_tries'] = nb_tries
     new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
-    new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
+    new_hash = rsa.compute_hash(json.dumps(new_block, sort_keys = True, ensure_ascii = False).encode('utf8'), 'SHA-256')
     while int.from_bytes(new_hash,'big') > max_hash:
         nb_tries += 1
         new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
         new_block['nb_tries'] = nb_tries
         new_block['nonce'] = ''.join(random.choice('0123456789abcdef') for _ in range(64))
-        new_hash = rsa.compute_hash(json.dumps(new_block).encode('utf8'), 'SHA-256')
+        new_hash = rsa.compute_hash(json.dumps(new_block, sort_keys = True, ensure_ascii = False).encode('utf8'), 'SHA-256')
 
     try_time = get_now()-start_time
     print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tries,'per try.')
@@ -153,8 +153,8 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
     story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
     new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'_'+new_block['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
 
-    with open(new_file_name, "w") as outfile:
-        outfile.write(json.dumps(story))
+    with open(new_file_name, "w", encoding='utf-8') as outfile:
+        json.dump(story, outfile, sort_keys = True, ensure_ascii = False)
     print('The newly validated story was saved in the working directory in '+new_file_name+'.')
 
     if send == None:
@@ -190,8 +190,8 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
 
 if __name__ == "__main__":
     if (len(sys.argv) == 3) or (len(sys.argv) == 2):
-        genesis_file = sys.argv[1]
-        genesis = import_json(genesis_file)
+        genesis_file_name = sys.argv[1]
+        genesis = import_json(genesis_file_name)
         if 'miner_name' not in genesis.keys():
             miner_name = sys.argv[2]
         else:

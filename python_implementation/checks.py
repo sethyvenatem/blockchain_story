@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 07/09/2023 Steven Mathey
+# 12/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -44,15 +44,15 @@ def check_file(file_name):
             return 'error'
         if len(genesis) == 0:
             print('You are checking and unsigend chapter and there is no genesis block available. No check is performed.')
-            write_chapter_to_readable_file(data)
-            return 'success'
+            output_file = write_chapter_to_readable_file(data)
+            return output_file
         
         test = check(check_chapter_data(data, genesis),'The chapter data does not comply with the rules of this story.')
         if test == 'error':
             return 'error'
         print('The submitted unsigned chapter data follows the rules of the story.')
-        write_chapter_to_readable_file(data)
-        return 'success'
+        output_file = write_chapter_to_readable_file(data)
+        return output_file
 
     elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(data.keys()):
         # signed chapter data
@@ -67,8 +67,8 @@ def check_file(file_name):
         if len(genesis) > 0:
             print('    - follows the rules of the story.')
         print('    - is signed correctly.')
-        write_chapter_to_readable_file(data['chapter_data'])
-        return 'success'
+        output_file = write_chapter_to_readable_file(data['chapter_data'])
+        return output_file
 
     elif set(['block_content', 'hash']) == set(data.keys()):
         # isolated validated block
@@ -85,7 +85,7 @@ def check_file(file_name):
             print('    - a consistent hash value.')
             print('    - consistent \'chapter_number\' and \'story_age_seconds\' fields.')
             print()
-            return 'success'
+            return 'check_genesis'
 
         elif 'signed_chapter_data' in data.keys():
             # normal block
@@ -100,9 +100,9 @@ def check_file(file_name):
             if len(genesis) > 0:
                 print('    - \'chapter_data\' that is consistent with the genesis bock.')
             print('    - consistently signed \'chapter_data\'.')
-            write_chapter_to_readable_file(data['signed_chapter_data']['chapter_data'])
+            output_file = write_chapter_to_readable_file(data['signed_chapter_data']['chapter_data'])
             print()
-            return 'success'
+            return output_file
 
     elif all([x.isdigit() for x in data.keys()]):
         # full story
@@ -209,19 +209,25 @@ def check_file(file_name):
             if genesis['number_of_chapters'] == block_number:
                 to_write.append('\n\nThe end.')
 
-            file_name = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') +'.txt'
-            with open(file_name, "w") as outfile:
+            output_file = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') +'.txt'
+            with open(output_file, "w") as outfile:
                 outfile.writelines(to_write)
-            print('The full story up until now was saved in an easily readable form in the working directory in '+file_name+'.')
+            print('The full story up until now was saved in an easily readable form in the working directory in '+output_file+'.')
+            
+            return output_file
 
         else:
             print('The provided genesis block has:')
             print('    - a consistent hash value.')
             print('    - consistent chapter numbering.')
             print('    - consistent \'story_age_seconds\' fields.')
+            
+            return 'check_genesis'
 
     else:
         print('The submitted file is not recognised.')
+        
+        return 'error'
         
 ################################# The program starts here ################################################
 

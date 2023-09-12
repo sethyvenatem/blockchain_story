@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # List of functions used by the other scripts
 #
-# 08/09/2023 Steven Mathey
+# 12/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -40,20 +40,20 @@ def import_json(file_name, stop_if_fail = True):
     if file_name[-5:].lower() != '.json':
         print('The file name ('+file_name+') must end with \'.json\'.')
         return 'error'
-        #sys.exit()
         
     try:
-        return json.load(open(file_name))
+        with open(file_name, encoding='utf-8') as file:
+            json_data = json.load(file)
+        return json_data
+        #return json.load(open(file_name))
     except:
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
                 return 'error'
-                #sys.exit(0)
             else:
                 print('Could not find '+file_name+'.')
                 return 'error'
-                #sys.exit(0)
         else:
             if file_name in glob.glob('*.json'):
                 print('Something is wrong withe the *.json file.')
@@ -73,6 +73,8 @@ def write_chapter_to_readable_file(chapter_data):
         outfile.writelines(to_write)
     
     print('The chapter content was saved in an easily readable form in the working directory in '+file_name+'.')
+    
+    return file_name
         
 def get_genesis_block(story_title):
     # Get the genesis block. Use the validated blockchain file if available and default to the local file 'genesis_block.json' if not.
@@ -101,25 +103,15 @@ def get_genesis_block(story_title):
     
     print('The genesis block from this file has been tampered with. Don\'t use it.')
     return 'error'
-    #sys.exit()
 
 def write_signed_chapter_to_file(signed_chapter_data):
     
     chapter_data = signed_chapter_data['chapter_data']
     signed_file_name = 'signed_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    with open(signed_file_name, "w") as outfile:
-        outfile.write(json.dumps(signed_chapter_data))
+    with open(signed_file_name, "w",  encoding='utf-8') as outfile:
+        json.dump(signed_chapter_data, outfile, ensure_ascii = False, sort_keys = True)
         
     print('The signed chapter data was saved in the working directory in '+signed_file_name+'.')
-
-def write_keys_to_file(public_key,private_key):
-    
-    public_key = public_key.save_pkcs1().hex()
-    private_key = private_key.save_pkcs1().hex()
-    keys = {'public_key': public_key, 'private_key': private_key}
-    keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    with open(keys_file_name, "w") as outfile:
-        outfile.write(json.dumps(keys))
 
 def check(statement,message):
     # This function works like the assert statement, but does not raise an error. It just prints a message and terminates the script.
@@ -130,7 +122,7 @@ def check(statement,message):
         #sys.exit()
         
 def check_hash(provided_hash,block_content):
-    computed_hash = rsa.compute_hash(json.dumps(block_content).encode('utf8'), 'SHA-256').hex()
+    computed_hash = rsa.compute_hash(json.dumps(block_content, ensure_ascii = False, sort_keys = True).encode('utf8'), 'SHA-256').hex()
     
     if computed_hash == provided_hash:
         return True
@@ -143,7 +135,7 @@ def validate_chapter_data(signed_chapter_data, genesis):
     
     test = check_chapter_data(signed_chapter_data['chapter_data'], genesis)
     
-    clear_chapter_data = json.dumps(signed_chapter_data['chapter_data']).encode('utf8')
+    clear_chapter_data = json.dumps(signed_chapter_data['chapter_data'], ensure_ascii = False, sort_keys = True).encode('utf8')
     encrypted_hashed_chapter = bytes.fromhex(signed_chapter_data['encrypted_hashed_chapter'])
     public_key = rsa.PublicKey.load_pkcs1(bytes.fromhex(signed_chapter_data['public_key']))
     try:
@@ -207,7 +199,7 @@ def get_eth_block_info(target_date, retry = True):
 
 def get_now():
     # This function constructs a datetime object for right now, UTC time zone and the seconds rounded to the closest integer.
-    # Thanks stack overflow: https://stackoverflow.com/questions/47792242/rounding-time-off-to-the-nearest-second-python
+    # Thanks: stack overflow: https://stackoverflow.com/questions/47792242/rounding-time-off-to-the-nearest-second-python
     
     now = dt.datetime.now(tz = pytz.UTC)
     if now.microsecond >= 500000:
