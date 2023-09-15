@@ -322,11 +322,11 @@ def run_checks(event):
         scroll_chapter_text.insert("1.0", chapter_text)
         lbl_checked_file = tk.Label(text = 'Your file has been checked!\nSee the text below for a description of what happened.')
         lbl_display_text = tk.Label(text = 'You can read the text contained in the file that you checked below.\nClose this window when you are finished.')
-        lbl_display_text.grid(row = 2, column = 0, sticky = 'n', padx=10)
-        scroll_chapter_text.grid(row = 3, column = 0, sticky = 'n', padx=10)
+        lbl_display_text.grid(row = 0, column = 1, sticky = 'n', padx=10, pady = 10)
+        scroll_chapter_text.grid(row = 1, column = 1, sticky = 'n', padx=10, pady = 10)
         
     lbl_checked_file.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
-    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10)
+    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
     
 window = tk.Tk()
 lbl_greeting = tk.Label(text="What do you want to do?")
