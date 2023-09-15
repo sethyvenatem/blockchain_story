@@ -260,27 +260,31 @@ def open_check_window(event):
     
     for ind, file in enumerate(json_files):
         if set(['story_title', 'chapter_number', 'author', 'chapter_title', 'text']) == set(file.keys()):
-            val = ('un-signed chapter',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])        
+            val = ('un-signed chapter',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
+            table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
         elif set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(file.keys()):
             val = ('signed chapter',file['chapter_data']['story_title'],file['chapter_data']['chapter_number'],file['chapter_data']['chapter_title'],file['chapter_data']['author'])
+            table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
         elif set(['block_content', 'hash']) == set(file.keys()):
             if 'signed_chapter_data' in file['block_content'].keys():
                 file = file['block_content']['signed_chapter_data']
                 val = ('validated block (isolated)',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
+                table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
             else:
                 file = file['block_content']
                 val = ('validated genesis block (isolated)',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
+                table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
         elif all([x.isdigit() for x in file.keys()]) and (len(file) != 0):
             
             largest_block_nb = str(max([int(k) for k in file.keys()]))
             if largest_block_nb == '0':
                 file = file['0']['block_content']
                 val = ('validated genesis block',file['story_title'],file['chapter_number'], 'no title',file['author'])
+                table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
             else:
                 file = file[largest_block_nb]['block_content']['signed_chapter_data']['chapter_data']
                 val = ('validated story',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
-            
-        table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
+                table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
     
     def get_file_to_check(a):
         curItem = table_to_check.focus()
