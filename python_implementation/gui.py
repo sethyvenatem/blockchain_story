@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Graphical user interface for the 3 blockchain functionalities
 #
-# 12/09/2023 Steven Mathey
+# 15/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -9,11 +9,9 @@ import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
 from tkinter import ttk
 import json
-#import os
+import os
 import glob
-#import subprocess
 import sys
-
 from io import StringIO
 
 from chapter_signature import *
@@ -31,13 +29,13 @@ def open_chapter_signature_window(event):
     but_check_read.grid_forget()
     
     # Place the widgets on the window
-    lbl_sign_greeting.grid(row = 0, column = 0, sticky='w')
+    lbl_sign_greeting.grid(row = 0, column = 1, sticky='ew', pady = 10)
     lbl_story_title.grid(row = 1, column = 0, sticky='w')
     lbl_chapter_number.grid(row = 2, column = 0, sticky='w')
     lbl_chapter_title.grid(row = 3, column = 0, sticky='w')
     lbl_author_name.grid(row = 4, column = 0, sticky='w')
     lbl_chapter_text.grid(row = 5, column = 0, sticky='nw')
-    lbl_above_accept.grid(row = 0, column = 2, sticky = 'nw')
+    lbl_above_accept.grid(row = 0, column = 2, sticky = 'nw', padx = 10, pady = 10)
     lbl_below_accept.grid(row = 2, column = 2)
     ent_story_title.grid(row = 1, column = 1, sticky='EW', padx=10)
     ent_chapter_number.grid(row = 2, column = 1, sticky='EW', padx=10)
@@ -111,12 +109,12 @@ def open_mining_window(event):
     
     json_files = glob.glob('*.json')
     
-    validated_stories = sorted([f for f in json_files if all([x.isdigit() for x in import_json(f).keys()])])
+    validated_stories = sorted([f for f in json_files if all([x.isdigit() for x in import_json(f, False).keys()]) and (len(import_json(f, False)) != 0)])
     validated_stories.reverse()
-    
-    signed_chapters = sorted([f for f in json_files if set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(import_json(f).keys())])
+
+    signed_chapters = sorted([f for f in json_files if set(['chapter_data', 'encrypted_hashed_chapter', 'public_key']) == set(import_json(f, False).keys())])
     signed_chapters.reverse()
-    
+
     # Import all the available signed chapters and validated stories
     validated_stories_json = []
     for validated_story in validated_stories:
@@ -159,7 +157,6 @@ def open_mining_window(event):
         curItem = table_validated_chapters.focus()
         global validated_story_file
         validated_story_file = validated_stories[int(curItem)]
-    #        print(table_validated_chapters.item(curItem),curItem)
 
     table_validated_chapters.bind('<ButtonRelease-1>', get_validated_story_file)
 
@@ -194,8 +191,8 @@ def open_mining_window(event):
     lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
     ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
     
-    check_send_to_discord.grid(row = 7,column = 0, padx = 10, pady = 10)
-    but_start_mining.grid(row = 8, column = 0,padx = 10, pady = 10)
+    check_send_to_discord.grid(row = 1,column = 2, padx = 10, pady = 10, sticky = 'nw')
+    but_start_mining.grid(row = 0, column = 2,padx = 10, pady = 10)
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
     #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
@@ -231,7 +228,7 @@ def run_mining(event):
     else:
         lbl_mined_chapter = tk.Label(text = 'Your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
     lbl_mined_chapter.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
-    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10)
+    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
     
 def open_check_window(event):
 
@@ -244,7 +241,7 @@ def open_check_window(event):
     
     file_names = sorted(glob.glob('*.json'))
     file_names.reverse()
-    json_files = [import_json(f) for f in file_names]
+    json_files = [import_json(f, False) for f in file_names]
     
     table_to_check['columns'] = ('file_type', 'story_title', 'chapter_number', 'chapter_title', 'author')
     table_to_check.column("#0", width=0, stretch='NO')
@@ -273,7 +270,7 @@ def open_check_window(event):
             else:
                 file = file['block_content']
                 val = ('validated genesis block (isolated)',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
-        elif all([x.isdigit() for x in file.keys()]):
+        elif all([x.isdigit() for x in file.keys()]) and (len(file) != 0):
             
             largest_block_nb = str(max([int(k) for k in file.keys()]))
             if largest_block_nb == '0':
@@ -282,8 +279,6 @@ def open_check_window(event):
             else:
                 file = file[largest_block_nb]['block_content']['signed_chapter_data']['chapter_data']
                 val = ('validated story',file['story_title'],file['chapter_number'],file['chapter_title'],file['author'])
-        else:
-            val = ('unrecognised file','no title','no number', 'no title', 'no author')
             
         table_to_check.insert(parent='',index='end',iid=ind,text='', values = val)
     
@@ -375,11 +370,11 @@ but_start_mining.bind("<Button-1>", run_mining)
 table_signed_chapters = ttk.Treeview()
 ent_miner_name = tk.Entry(width = 50)
 var1 = tk.IntVar()
-check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server", variable=var1)
-lbl_chapter_choice = tk.Label(text="Select a signed chapter below. Pick the story with:\n - the right title.\n - the right chapter number.",justify="left")
+check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server\nYou can also upload it manually later.", variable=var1,justify="left")
+lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")
 table_validated_chapters = ttk.Treeview()
-lbl_story_choice = tk.Label(text="Select a validated story below. Pick the story with:\n - the right title.\n - the largest number of chapters.\n - The smallest story age.",justify="left")
-lbl_check_greeting = tk.Label(text="Select a file to check and then view.")
+lbl_story_choice = tk.Label(text="Select a (possibly) unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story age. You can scroll !",justify="left")
+lbl_check_greeting = tk.Label(text="Select a file to check and then view.\n\nYou can scroll!")
 table_to_check = ttk.Treeview()
 but_check_file = tk.Button(text = 'Check the selected file.')
 but_check_file.bind("<Button-1>", run_checks)

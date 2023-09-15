@@ -1,13 +1,12 @@
 # -----------------------------------------------------------
 # List of functions used by the other scripts
 #
-# 12/09/2023 Steven Mathey
+# 15/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
 import json
 import rsa
-#import io
 import sys
 import glob
 import numpy as np
@@ -45,18 +44,18 @@ def import_json(file_name, stop_if_fail = True):
         with open(file_name, encoding='utf-8') as file:
             json_data = json.load(file)
         return json_data
-        #return json.load(open(file_name))
+
     except:
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
-                print('Something is wrong withe the *.json file.')
+                print('Something is wrong withe '+file_name+'.')
                 return 'error'
             else:
                 print('Could not find '+file_name+'.')
                 return 'error'
         else:
             if file_name in glob.glob('*.json'):
-                print('Something is wrong withe the *.json file.')
+                print('Something is wrong withe '+file_name+'.')
             else:
                 print('Could not find '+file_name+'.')
             return {}
@@ -80,17 +79,17 @@ def get_genesis_block(story_title):
     # Get the genesis block. Use the validated blockchain file if available and default to the local file 'genesis_block.json' if not.
     # With the validated blockchain, check the integrity of the genesis block and stop the script if the hash value does not match.
     
-    story_title = story_title.title().replace(' ','')+'_'
     files = glob.glob('*.json')
     
-    files = [x for x in files if x.startswith(story_title)]
+    files = [f for f in files if all([x.isdigit() for x in import_json(f, False).keys()])]
+    files = [f for f in files if import_json(f)['0']['block_content']['story_title'] == story_title]
+    
     if len(files) == 0:
         print('The genesis block is not validated. Using the file \'genesis_block.json\'.')
         return import_json('genesis_block.json', False)
     
-    file_index = np.argmax(np.array([int(x[len(story_title):len(story_title)+3]) for x in files]))
+    file_index = np.argmax(np.array([max([int(x) for x in import_json(f).keys()]) for f in files]))
     file_name = files[file_index]
-
     try:
         blockchain = import_json(file_name, False)
         if check_hash(blockchain['0']['hash'],blockchain['0']['block_content']):

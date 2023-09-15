@@ -94,6 +94,10 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
             json.dump({'0': genesis}, outfile, sort_keys = True, ensure_ascii = False)
         return 'success'
 
+    if len(miner_name) == 0:
+        print('Empty miner name provided.')
+        return 'error'
+    
     # Import the data to validate
     story = import_json(story_file)
     if story == 'error':
@@ -150,7 +154,7 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
     print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tries,'per try.')
     new_block = {'block_content': new_block.copy()}
     new_block['hash'] = new_hash.hex()
-    story[signed_chapter_data['chapter_data']['chapter_number']] = new_block
+    story[str(signed_chapter_data['chapter_data']['chapter_number'])] = new_block
     new_file_name = story['0']['block_content']['story_title'].title().replace(' ','')+'_'+str(signed_chapter_data['chapter_data']['chapter_number']).rjust(3, '0')+'_'+new_block['block_content']['mining_date'].replace(' ','_').replace(':','_').replace('/','_')+'.json'
 
     with open(new_file_name, "w", encoding='utf-8') as outfile:
