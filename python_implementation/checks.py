@@ -104,7 +104,7 @@ def check_file(file_name):
             print()
             return output_file
 
-    elif all([x.isdigit() for x in data.keys()]):
+    elif all([x.isdigit() for x in data.keys()]) and (len(data) != 0):
         # full story
 
         test = check('0' in data.keys(), 'The genesis block is absent from the submitted story.')

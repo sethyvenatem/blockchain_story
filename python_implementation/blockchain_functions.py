@@ -81,7 +81,7 @@ def get_genesis_block(story_title):
     
     files = glob.glob('*.json')
     
-    files = [f for f in files if all([x.isdigit() for x in import_json(f, False).keys()])]
+    files = [f for f in files if (all([x.isdigit() for x in import_json(f, False).keys()]) and (len(import_json(f, False)) != 0))]
     files = [f for f in files if import_json(f)['0']['block_content']['story_title'] == story_title]
     
     if len(files) == 0:
