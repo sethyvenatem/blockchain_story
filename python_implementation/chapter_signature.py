@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 12/09/2023 Steven Mathey
+# 29/09/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -21,11 +21,11 @@ import sys
 #import numpy as np
 from blockchain_functions import *
 
-def write_keys_to_file(public_key,private_key, keys_file_name):
+def write_keys_to_file(public_key, private_key, author_name, keys_file_name):
     
     public_key = public_key.save_pkcs1().hex()
     private_key = private_key.save_pkcs1().hex()
-    keys = {'public_key': public_key, 'private_key': private_key}
+    keys = {'public_key': public_key, 'private_key': private_key, 'author': author_name}
     with open(keys_file_name, "w",  encoding='utf-8') as outfile:
         json.dump(keys, outfile, ensure_ascii = False, sort_keys = True)
         
@@ -59,18 +59,37 @@ def sign_chapter(file_name):
     if test == 'error':
         return 'error'
 
-    # Generate public and private keys
-    (public_key, private_key) = rsa.newkeys(1024)
-    # Hash the chapter_data and encrypt it with the private key
-    encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data, ensure_ascii = False, sort_keys = True).encode('utf8'), private_key, 'SHA-256')
+    # get all json files
+    json_files = glob.glob('*.json')
+    # keep only the key files
+    json_files = [f for f in json_files if set(['public_key', 'private_key', 'author']) == set(import_json(f, False).keys())]
+    # get the file with the right author
+    json_files = [f for f in json_files if import_json(f, False)['author'] == chapter_data['author']]
+    if len(json_files) == 0:
+        print('No key file was found. A new private-public key set was generated and saved to the working folder.')
+        # Generate public and private keys
+        (public_key, private_key) = rsa.newkeys(1024)
+        
+        # Save the keys to another json file
+        keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
+        write_keys_to_file(public_key, private_key, chapter_data['author'], keys_file_name)
+        
+        # Hash the chapter_data and encrypt it with the private key
+        encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data, ensure_ascii = False, sort_keys = True).encode('utf8'), private_key, 'SHA-256')
+    elif len(json_files) == 1:
+        This was not checked. Did I import the private key correctly?
+        print('A single key file was found and used to validate the chapter.')
+        key_file = import_json(json_files[0])
+        private_key = rsa.PrivateKey.load_pkcs1(bytes.fromhex(key_file['private_key']))
+        # Hash the chapter_data and encrypt it with the private key
+        encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data, ensure_ascii = False, sort_keys = True).encode('utf8'), private_key, 'SHA-256')
+    else:
+        print('Multiple key files with the same author name were found. Clean up the working directory.')
+        return 'error'
 
     # Assemble the signed chapter data and save it as a json file
     signed_chapter_data = {'chapter_data': chapter_data,'encrypted_hashed_chapter': encrypted_hashed_chapter.hex(),'public_key': public_key.save_pkcs1().hex()}
     write_signed_chapter_to_file(signed_chapter_data)
-
-    # Save the keys to another json file
-    keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
-    write_keys_to_file(public_key, private_key, keys_file_name)
 
     # generate a single readable *.txt file with the chapter data
     _ = write_chapter_to_readable_file(chapter_data)
