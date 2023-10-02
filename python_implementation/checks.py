@@ -60,7 +60,7 @@ def check_file(file_name):
         genesis = get_genesis_block(data['chapter_data']['story_title'])
         if genesis == 'error':
             return 'error'
-        test = check(validate_chapter_data(data, genesis), 'The signed chapter data does not comply with the rules of this story.')
+        test = check(validate_chapter_data(data, {'0':{'block_content':genesis}}), 'The signed chapter data does not comply with the rules of this story.')
         if test == 'error':
             return 'error'
         print('The submitted signed chapter data:')
@@ -92,7 +92,7 @@ def check_file(file_name):
             genesis = get_genesis_block(data['signed_chapter_data']['chapter_data']['story_title'])
             if genesis == 'error':
                 return 'error'
-            test = check(validate_chapter_data(data['signed_chapter_data'], genesis), 'The signed chapter data does not comply with the rules of this story.')
+            test = check(validate_chapter_data(data['signed_chapter_data'], {'0':{'block_content':genesis}}), 'The signed chapter data does not comply with the rules of this story.')
             if test == 'error':
                 return 'error'
             print('The provided isolated block has:')
@@ -173,7 +173,7 @@ def check_file(file_name):
 
             block = block['signed_chapter_data']
 
-            test = check(validate_chapter_data(block, genesis), 'The signed chapter data of block '+str(block_number)+' does not comply with the rules of this story.')
+            test = check(validate_chapter_data(block, data), 'The signed chapter data of block '+str(block_number)+' does not comply with the rules of this story.')
             if test == 'error':
                 return 'error'
 

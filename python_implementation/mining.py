@@ -108,7 +108,7 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
 
     # Check that the chapter data is valid.
     genesis = story['0']['block_content']
-    test = check(validate_chapter_data(signed_chapter_data, genesis), 'The signed chapter data does not comply with the rules of this story.')
+    test = check(validate_chapter_data(signed_chapter_data, story), 'The signed chapter data does not comply with the rules of this story.')
     if test == 'error':
         return 'error'
 

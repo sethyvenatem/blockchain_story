@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Graphical user interface for the 3 blockchain functionalities
 #
-# 15/09/2023 Steven Mathey
+# 02/10python3/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -377,7 +377,7 @@ var1 = tk.IntVar()
 check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server\nYou can also upload it manually later.", variable=var1,justify="left")
 lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")
 table_validated_chapters = ttk.Treeview()
-lbl_story_choice = tk.Label(text="Select a (possibly) unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story age. You can scroll !",justify="left")
+lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story age. You can scroll !",justify="left")
 lbl_check_greeting = tk.Label(text="Select a file to check and then view.\n\nYou can scroll!")
 table_to_check = ttk.Treeview()
 but_check_file = tk.Button(text = 'Check the selected file.')

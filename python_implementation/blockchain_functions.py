@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # List of functions used by the other scripts
 #
-# 15/09/2023 Steven Mathey
+# 02/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -48,14 +48,14 @@ def import_json(file_name, stop_if_fail = True):
     except:
         if stop_if_fail:
             if file_name in glob.glob('*.json'):
-                print('Something is wrong withe '+file_name+'.')
+                print('Something is wrong with '+file_name+'.')
                 return 'error'
             else:
                 print('Could not find '+file_name+'.')
                 return 'error'
         else:
             if file_name in glob.glob('*.json'):
-                print('Something is wrong withe '+file_name+'.')
+                print('Something is wrong with '+file_name+'.')
             else:
                 print('Could not find '+file_name+'.')
             return {}
@@ -127,11 +127,13 @@ def check_hash(provided_hash,block_content):
         return True
     return False
 
-def validate_chapter_data(signed_chapter_data, genesis):
+def validate_chapter_data(signed_chapter_data, story):
     # This validates the signed chapter data. It checks:
     #    - that the chapter data complies with the rules of the genesis block.
     #    - that the digital signature of the signed chapter data is right.
+    #    - that there is only one public key assocaited with each author name.
     
+    genesis = story['0']['block_content']
     test = check_chapter_data(signed_chapter_data['chapter_data'], genesis)
     
     clear_chapter_data = json.dumps(signed_chapter_data['chapter_data'], ensure_ascii = False, sort_keys = True).encode('utf8')
@@ -143,6 +145,17 @@ def validate_chapter_data(signed_chapter_data, genesis):
         test = False
         print('The signed chapter data has been modified.')
     
+    authors = {k: story[k]['block_content']['signed_chapter_data']['chapter_data']['author'] for k in story.keys() if k!= '0' and story[k]['block_content']['signed_chapter_data']['chapter_data']['author'] == signed_chapter_data['chapter_data']['author']}
+    public_keys = {k: story[k]['block_content']['signed_chapter_data']['public_key'] for k in story.keys() if k!= '0' and story[k]['block_content']['signed_chapter_data']['chapter_data']['author'] == signed_chapter_data['chapter_data']['author']}
+    
+    if len(set(public_keys.values())) > 1:
+        print('There is something wrong with the story file. Multiple public keys are associated with a single author.')
+        test = False
+    elif len(set(public_keys.values())) == 1:    
+        if {signed_chapter_data['public_key']} != set(public_keys.values()):
+            print('The public key of the signed chapter data does not correspond with the key used in previous chapters. Please provide the right keys file or change the author name.')
+            test = False
+        
     return test
 
 def get_eth_block_info(target_date, retry = True):

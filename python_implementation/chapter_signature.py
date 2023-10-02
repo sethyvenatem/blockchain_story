@@ -10,15 +10,12 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 29/09/2023 Steven Mathey
+# 02/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
 import rsa
-#import io
 import sys
-#import glob
-#import numpy as np
 from blockchain_functions import *
 
 def write_keys_to_file(public_key, private_key, author_name, keys_file_name):
@@ -49,7 +46,7 @@ def sign_chapter(file_name):
         else:
             print('The file name must end with \'.txt\'.')
             return 'error'
-
+    
     genesis = get_genesis_block(chapter_data['story_title'])
     if genesis == 'error':
         return 'error'
@@ -77,10 +74,10 @@ def sign_chapter(file_name):
         # Hash the chapter_data and encrypt it with the private key
         encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data, ensure_ascii = False, sort_keys = True).encode('utf8'), private_key, 'SHA-256')
     elif len(json_files) == 1:
-        This was not checked. Did I import the private key correctly?
-        print('A single key file was found and used to validate the chapter.')
+        print('A key file was found and used to validate the chapter. The file name is '+json_files[0]+'.')
         key_file = import_json(json_files[0])
         private_key = rsa.PrivateKey.load_pkcs1(bytes.fromhex(key_file['private_key']))
+        public_key = rsa.PublicKey.load_pkcs1(bytes.fromhex(key_file['public_key']))
         # Hash the chapter_data and encrypt it with the private key
         encrypted_hashed_chapter = rsa.sign(json.dumps(chapter_data, ensure_ascii = False, sort_keys = True).encode('utf8'), private_key, 'SHA-256')
     else:
