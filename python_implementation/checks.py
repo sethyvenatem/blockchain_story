@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 12/09/2023 Steven Mathey
+# 03/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -205,6 +205,7 @@ def check_file(file_name):
             print('    - All the reported \'mining_date\' fields are consistent.')
             print('    - All the reported \'difficulty\' fields are set correctly.')
             print('    - Each block hash value conform to the difficulty set by the previous block.')
+            print('    - A single and consistent public key is assocaited to each author.')
 
             if genesis['number_of_chapters'] == block_number:
                 to_write.append('\n\nThe end.')
@@ -212,6 +213,7 @@ def check_file(file_name):
             output_file = genesis['story_title'].title().replace(' ','') + '_' + str(block_number).rjust(3, '0') +'.txt'
             with open(output_file, "w") as outfile:
                 outfile.writelines(to_write)
+            print()
             print('The full story up until now was saved in an easily readable form in the working directory in '+output_file+'.')
             
             return output_file

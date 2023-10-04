@@ -23,16 +23,14 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 12/09/2023 Steven Mathey
+# 04/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
 import json
 import rsa
-#import io
 import datetime as dt
 import sys
-#from web3 import Web3, AsyncWeb3
 import pytz
 import numpy as np
 import random
@@ -137,7 +135,7 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
     new_block = set_new_block_difficulty_and_mining_date(new_block, genesis, difficulty, mining_date_previous_block, story_age_previous_block)
     # Set the hash value below which the block hash has to be. Use powers of 2 so that the difficulty is doubled as difficulty increases by 1.
     max_hash = 2**(256-difficulty)-1
-    print('Start mining (at '+ dt.datetime.strftime(get_now(), '%Y/%m/%d %H:%M:%S')+' UTC)! On my computer, it takes about '+str(round(time_to_mine_days(difficulty)*24,3))+' hours to complete.')
+    print('Start mining (at '+ dt.datetime.strftime(get_now(), '%Y/%m/%d %H:%M:%S')+' UTC)! On my computer, I estimate it to take about '+str(round(time_to_mine_days(difficulty)*24,3))+' hours to complete.')
     nb_tries = 1
     start_time = pytz.utc.localize(dt.datetime.strptime(new_block['mining_date'], '%Y/%m/%d %H:%M:%S'))
     new_block['nb_tries'] = nb_tries
@@ -151,7 +149,7 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
         new_hash = rsa.compute_hash(json.dumps(new_block, sort_keys = True, ensure_ascii = False).encode('utf8'), 'SHA-256')
 
     try_time = get_now()-start_time
-    print('The mining took',nb_tries,'tries and',try_time,'. This is',try_time/nb_tries,'per try.')
+    print('The mining took',nb_tries,'tries and',try_time+'. This is',try_time/nb_tries,'per try.')
     new_block = {'block_content': new_block.copy()}
     new_block['hash'] = new_hash.hex()
     story[str(signed_chapter_data['chapter_data']['chapter_number'])] = new_block

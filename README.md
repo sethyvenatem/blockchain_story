@@ -1,8 +1,8 @@
 # Blockchain Story
 
-This is an implementation of a blockchain to tell a story. The story is written collaboratively, one chapter at a time and each chapter is validated and appended at the end of the blockchain with a proof of work protocol. The participants can take (up to) two roles: writer and/or miner. The writers each write their version of the next chapter of the story and share it with the community. Then the miners can pick one of the chapters and try to add it to the blockchain. If the chapter is popular, then many miners will try to validate it and it will have a high chance of being finalised. This is not an efficient way to tell a story (even collaboratively), but it provides a story that can be written in a decentralised way and with a canon that is cryptographically immutable. It's only possible to change the story by writing the next chapters and taking it somewhere interesting. The past cannot be changed. Moreover, it provides an interesting and original way to learn about blockchain technologies.
+This is an implementation of a blockchain to tell a story. The story is written collaboratively, one chapter at a time and each chapter is validated and appended at the end of the blockchain with a proof of work protocol. The participants can take two roles: writer and/or miner. The writers each write their version of the next chapter of the story and share it with the community. Then the miners can pick one of the chapters and try to add it to the blockchain. If the chapter is popular, then many miners will try to validate it and it will have a high chance of being finalised. This is not an efficient way to tell a story (even collaboratively), but it provides a story that can be written in a decentralised way and with a canon that is cryptographically immutable. It's only possible to change the story by writing the next chapters and taking it somewhere interesting. The past cannot be changed. Moreover, it provides an interesting and original way to learn about blockchain technologies.
 
-This is a slow blockchain. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually (uploading the submissions and validated story) over a dedicated discord server: [https://discord.gg/wD8zs75tck](https://discord.gg/wD8zs75tck).
+This is a slow blockchain. Indeed, writers need some time to write their submissions and miners need time to read all the submissions. For this reason, there is no need to automatise the peer-to-peer communication. This blockchain is intended to be shared manually between its participants. To this end, I created discord server: [https://discord.gg/wD8zs75tck](https://discord.gg/wD8zs75tck), where chapter submissions as well as validated stories can be uploaded.
 
 In principle, such a blockchain only has to be defined before it can start growing. Anyone can read the rules and definitions and code up their own implementation. The current implementation serves multiple goals:
 
@@ -11,13 +11,13 @@ In principle, such a blockchain only has to be defined before it can start growi
 - It teaches all the basics of blockchain technology.
 - It provides a formal and precise definition of the blockchain ant its rules.
 
-The repository provides all the tools necessary to participate in the story-writing: One script to digitally sign the chapter to be validated (chapter\_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one script to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (checks.py). The third script also creates an easily readable *.txt file with only the story content. The story does not have to be written in English. The encoding is utf8. This implementation was however not tested with special characters.
+The repository provides all the tools necessary to participate in the story-writing: One script to digitally sign the chapter to be validated (chapter\_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one script to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (checks.py). The third script also creates an easily readable *.txt file with only the story content. The story does not have to be written in English. Moreover, a graphical user interface (gui.py) is also available. This script provides access to the three other scripts though clickable buttons and forms. The encoding is utf8. This implementation was however not tested with special characters.
 
 ## Blockchain rules
 
 This blockchain is not about currencies or any type of transactions. Instead it's all about who gets to control the story. The writers are expected to want their contributions to be validated (and will probably be miners themselves). The miners want their favourite submission to be validated. The rules of the blockchain are designed to encourage a fair and fun writing process with this motivation in mind. In particular, a delay is imposed between the validation of any block and the beginning of the mining of the next one. This delay can change from story to story, but is intended to be about 1 week so that the writers have time to prepare the next submissions after each block is validated.
 
-The details of the rules to add a chapter to the story are inserted in the first block, the genesis block. This block contains the information necessary for 'narrative' as well as 'blockchain' rules:
+The details of the rules to add a chapter to the story are inserted in the first block, the genesis block. This block contains the information necessary for 'narrative' as well as 'blockchain' rules.
 
 - The 'narrative' rules are:
     - The title of the story is fixed at the beginning and must be repeated correctly in each block.
@@ -31,6 +31,7 @@ These narrative rules can be different for every new story. Except for the story
     - There is an imposed delay between the mining of two consecutive blocks.
     - Each block contains a difficulty parameter (diff, integer between 0 and 256) that is determined by the block's mining time and is applied to the next block. The difficulty is defined by requiring that the block hashes be smaller than (the hexadecimal representation of) 2<sup>256-diff</sup>-1. This means that, on average, about 2<sup>diff</sup> guesses will be necessary to validate a block.
     - The difficulty is adjusted (in steps of plus or minus 1) unless the intended mining time is matched.
+    - Blocks with identical authors must be signed with the same public key.
    
 These rules are imposed with the use of different systems:
 
@@ -120,7 +121,7 @@ This implementation of a blockchain story is managed with *.json files. The main
 }
 ```
 
-The different blocks are indexed by their 'block\_number' field (which is an integer represented as a string). Each block has two fields: 'block\_content' and 'hash'. The second is the hash of the first. All the hashes are hexadecimal representations of the SHA-256 hash of the string containing the block content. All the blocks have 4 fields in common in their 'block\_content' field:
+The different blocks are indexed by their 'block\_number' field (which is an integer represented as a string). Each block has two fields: 'block\_content' and 'hash'. The second is the hash of the first. All the hashes are hexadecimal representations of the SHA-256 hash of the string containing the block content alphabetically sorted by key. All the blocks have 4 fields in common in their 'block\_content' field:
 
 - 'miner\_name' This is the name of the miner and can be any string specified by the miner. It can't have any spaces.
 - 'mining\_date' This is the mining date (string with format %Y/%m/%d %H:%M:%S). The date is reported in the UTC time zone and with the seconds rounded to the closest integer. Within the restrictions discussed above, it can be set freely. It should however be the date at which the block was mined. For the genesis block, it can be set entirely freely.
@@ -149,15 +150,15 @@ The chapter submissions are read from signed-chapter-data files. The file name p
 
 ```json
 {
-	"chapter_data": {
-		"story_title": "test story",
-		"chapter_number": 1,
-		"author": "Steven Mathey",
-		"chapter_title": "First chapter",
-		"text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus."
-	},
-	"encrypted_hashed_chapter": "2aca7d50ca560a16d55c3426e3f39046fae76c0d4a4134f88daaa212146156dc879ddf238d23748f385ad0db7ccf0d58212a6b7617a6712d1f8d7605c84d843d9f55c3f36543fa70a0b03eeed4b2c6e127c72ac7549ac4fb7db31fe2fdd96e7d5f2b9ec3aea50ed6acdf078c62b1fc88e4332b5a837feae7ecad4941593ba273",
-	"public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f4742414948712b704553584a4c7a6c2f51304946535a2f5a653854694a4d364b496156344d474b5378387459756c536b4457796a4f32785730480a707547502b48666e5a6455615478597471316d3074445039423236304c69715a59564b4d4e314e57347549477536426e586768434c32706f5170373173646c4d0a4c4a5434463853516c6e537a59733557364e6436547267316873316978704267376c4264355270714f2b385057344d785965736841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
+   "chapter_data":{
+      "author":"Steven Mathey",
+      "chapter_number":1,
+      "chapter_title":"First chapter",
+      "story_title":"test story",
+      "text":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
+   },
+   "encrypted_hashed_chapter":"4e16ce853c68d029bcae183162cf8e6a0ee77460b084fe4d543921a215222efa6a4bc7dcacd46b2c1322f5bad2dbc7a088f6d723b668aa9f6ba4057ed8f91630258c5de9674f19b403b925c4690c708f25047b4791e6096fdcb8f5037336a0043888b1e313fd7637842fdb56848daf19f37b1844176e4594033996e982586125",
+   "public_key":"2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
 }
 ```
 These files contain 3 fields:
@@ -165,13 +166,23 @@ These files contain 3 fields:
 - 'chapter\_data' This is the actual content of the chapter to validate. It contains 5 sub-fields 'story\_title', 'chapter\_number', 'author', 'chapter\_title' and 'text'. The chapter\_number is an integer and all the other fields are strings. The story\_title must coincide with the story\_title reported in the genesis block. The chapter number must be one plus the largest validated block number. Line returns are included in the text by including the string '\n'. This is handled automatically if the chapter is signed by providing the text as a *.txt file in chapter\_signature.py.
 - 'encrypted\_hashed\_chapter' and 'public\_key' provide the digital signature through the RSA protocol. The chapter data is encrypted with the author's private key and the public key is provided to enable the proof that the text has not been changed.
 
-## How to use the three python scripts
+## How to use the python scripts
 
-The details on how the three python scripts work are in the scripts as comments. Here are instructions on how to use them:
+Additional details on how the python scripts work are in the scripts as comments. Here are instructions on how to use them:
 
 ### chapter\_signature.py
 
-This script performs a digital signature on any given chapter. This is done with the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)). A new pair of private and public keys are generated when the script is run. The private key is used to encrypt the (hash of) the chapter data and both the encrypted hash and the public key are provided together with the chapter data. The public key can be used to decrypt the data and check that it is the same as the clear data. This test proves that the chapter data has not been modified because only the holder of the corresponding private key can produce such an encryption.
+This script performs a digital signature on any given chapter. This is done with the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)). The script searches the working folder for a key file with the corresponding author. If the file is not found, a new pair of private and public keys are generated. The private key is used to encrypt the (hash of) the chapter data and both the encrypted hash and the public key are provided together with the chapter data. The public key can be used to decrypt the data and check that it is the same as the clear data. This test proves that the chapter data has not been modified because only the holder of the corresponding private key can produce such an encryption.
+
+The key file is a json file wit the following file name pattern is keys\_\[ChapterAuthor\].json. For example, my key file is called keys\_\StevenMathey.json and looks like:
+
+```json
+{
+	"author": "Steven Mathey",
+	"private_key": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+	"public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
+}
+```
 
 The chapter data can be provided in two ways:
 
@@ -180,10 +191,10 @@ The chapter data can be provided in two ways:
 
 If possible, the script checks that the chapter data to sign is consistent with the genesis block. It looks through the working directory and uses the genesis block of the longest validated story if there is one. If not, it looks for a file called 'genesis\_block.json'. If neither are available, then the test is skipped.
 
-The script creates 3 files in the working directory:
+The script creates 2 or 3 files in the working directory:
 
 - the signed chapter data (\*.json file).
-- a \*.json file with the private and public keys
+- a \*.json file with the private and public keys (only if absent)
 - a \*.txt file with the chapter data displayed in an easily readable way.
 
 ### mining.py
@@ -204,6 +215,8 @@ This script checks that the submitted data follows all the rules of the blockcha
 - The user submits multiple linked blocks. The script checks that these are a list of consecutive blocks starting with block '0'. Then all the above checks are performed independently on each block (with the genesis block being block '0'). Furthermore, the script checks that all the blocks are linked correctly. In particular, it checks the chapter numbering, the story\_age\_seconds field, the hash value of the ETH block, the hash value of the previous block, the mining date, the correct application of the difficulty setting and the difficulty setting its self.
 
 In all cases, the submitted file must be placed in the working directory. Furthermore, unless the user submits a genesis block and if all the tests are passed, the script produces a \*.txt file with the entire submitted the story in a readable form.
+
+### gui.py
 
 ## Disclaimer
 

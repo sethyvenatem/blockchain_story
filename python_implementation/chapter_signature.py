@@ -10,7 +10,7 @@
 #    - Call the script with no argument. Then the script prompts the user for the necessary information. The user will be prompted to provide a file name for the text of the chapter. This text must be placed in a *.txt file in the same directory as the script. Line returns are then handled by the *.txt format and converted to '\n' by the script.
 #
 #
-# 02/10/2023 Steven Mathey
+# 04/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 import json
@@ -68,7 +68,7 @@ def sign_chapter(file_name):
         (public_key, private_key) = rsa.newkeys(1024)
         
         # Save the keys to another json file
-        keys_file_name = 'keys_'+chapter_data['story_title'].title().replace(' ','') + '_' + str(chapter_data['chapter_number']).rjust(3, '0') + '_'+chapter_data['author'].title().replace(' ','')+'.json'
+        keys_file_name = 'keys_'+chapter_data['author'].title().replace(' ','')+'.json'
         write_keys_to_file(public_key, private_key, chapter_data['author'], keys_file_name)
         
         # Hash the chapter_data and encrypt it with the private key
