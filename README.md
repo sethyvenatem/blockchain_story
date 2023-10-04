@@ -11,7 +11,7 @@ In principle, such a blockchain only has to be defined before it can start growi
 - It teaches all the basics of blockchain technology.
 - It provides a formal and precise definition of the blockchain ant its rules.
 
-The repository provides all the tools necessary to participate in the story-writing: One script to digitally sign the chapter to be validated (chapter\_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one script to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (checks.py). The third script also creates an easily readable *.txt file with only the story content. The story does not have to be written in English. Moreover, a graphical user interface (gui.py) is also available. This script provides access to the three other scripts though clickable buttons and forms. The encoding is utf8. This implementation was however not tested with special characters.
+The repository provides all the tools necessary to participate in the story-writing: One script to digitally sign the chapter to be validated (chapter\_signature.py), one script to validate the chapter and add it to the blockchain (mining.py) and one script to make sure that any given blockchain has not been tampered with and follows the rules set up at the beginning (checks.py). The third script also creates an easily readable \*.txt file with only the story content. Moreover, a graphical user interface (gui.py) is also available. It provides access to the three other scripts through clickable buttons and forms. Finally, there is a script to scrape the discord server and download all the relevant \*.json files (get_files_from_discord.py). The story does not have to be written in English. The encoding is utf8. This implementation was however not tested with special characters.
 
 ## Blockchain rules
 
@@ -217,6 +217,14 @@ This script checks that the submitted data follows all the rules of the blockcha
 In all cases, the submitted file must be placed in the working directory. Furthermore, unless the user submits a genesis block and if all the tests are passed, the script produces a \*.txt file with the entire submitted the story in a readable form.
 
 ### gui.py
+
+The graphical user interface can run any of the above three scripts. Run it and answer the questions. Once it is finished, it shows a summary of what happened.
+
+- The chapter signature is done through form. The chapter content can be pasted in directly.
+- The chapter mining is done through another form. The script searches the working directory for any signed chapter and validated story files and displays them in two separate tables. The user can then click the chapter file validate and the story to add it to and click a button to run the mining process. There is also a tick-box to tell the script if the validated story should be automatically sent to the discord server (through the webhook) or not.
+- The chapter checking creates a list of all the files that can be checked (from the files in the working directory). The user can then click any file and check it. The script then produces two text boxes. The left one is a summary of the checks that were performed and the right one shows the story content of checked file in an easier-to-read way.
+
+### get\_files\_from\_discord.py
 
 ## Disclaimer
 

@@ -4,7 +4,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 guild = discord.Guild
-token = 'MTE1MzI5NTkxMDg5MDEzMTU1Nw.Guu-v9.uss6alnVVMgst7Coaqx5cnPjwRTm93AEgdAqXE'
+with open('discord_token.txt') as file:
+    token = file.read()
 signed_chapters_id = 1133791244858966096
 validates_stories_id = 1133791437637558332
 
