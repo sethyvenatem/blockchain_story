@@ -218,13 +218,15 @@ In all cases, the submitted file must be placed in the working directory. Furthe
 
 ### gui.py
 
-The graphical user interface can run any of the above three scripts. Run it and answer the questions. Once it is finished, it shows a summary of what happened.
+The graphical user interface can run any of the above three scripts. Start it and answer the questions! Once it is finished, it shows a summary of what happened.
 
-- The chapter signature is done through form. The chapter content can be pasted in directly.
-- The chapter mining is done through another form. The script searches the working directory for any signed chapter and validated story files and displays them in two separate tables. The user can then click the chapter file validate and the story to add it to and click a button to run the mining process. There is also a tick-box to tell the script if the validated story should be automatically sent to the discord server (through the webhook) or not.
-- The chapter checking creates a list of all the files that can be checked (from the files in the working directory). The user can then click any file and check it. The script then produces two text boxes. The left one is a summary of the checks that were performed and the right one shows the story content of checked file in an easier-to-read way.
+- The chapter signature is done through a form. The chapter content can be pasted in directly.
+- The chapter mining is done by selecting the new chapter and the story from two lists. The script searches the working directory for any signed chapter and validated story files and displays them in two separate tables. The user can then click the chapter file to validate and the story to add it to and click a button to run the mining process. There is also a tick-box to tell the script if the validated story should be automatically sent to the discord server (through the webhook) or not.
+- The chapter checking creates a list (from the files in the working directory) of all the files that can be checked. The user can then click any file and check it. The script then produces two text boxes. The left one is a summary of the checks that were performed and the right one shows the story content of the selected file in an easier-to-read way.
 
 ### get\_files\_from\_discord.py
+
+This script implements a discord bot that logs onto the server, downloads all the available \*.json files to the working directory and shuts down. This automatises a simple task. This script requires a discord bot token to work. The user should generate their own token (from the discord developer portal) and place it in a file called discord_token.txt in the working directory.
 
 ## Disclaimer
 

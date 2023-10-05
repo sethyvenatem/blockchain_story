@@ -1,3 +1,10 @@
+# -----------------------------------------------------------
+# Discord bot to scrape all the *.json files from the server.
+#
+# 04/10/2023 Steven Mathey
+# email steven.mathey@gmail.ch
+# -----------------------------------------------------------
+
 import discord
 
 intents = discord.Intents.default()
