@@ -23,7 +23,7 @@
 #    - The difficulty of the current block is determined with the 'intended_mining_time_days' attribute of the genesis block. If the mining time is shorter than 1/4 of the intented mining time, then the difficulty is set to the difficulty of the previous block plus 1 (effectively doubling the mining time). If the mining time is longer than 1/4 of the intented mining time, the the dificulty is set to the difficulty of the previous block minus one. In the other cases, the difficulty is the difficulty of the previous block.
 #    - Once a suitable nonce is found, then the corresponding hash is included in the dictionary and the new story json file is saved to the working directory.
 #
-# 04/10/2023 Steven Mathey
+# 06/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -149,7 +149,7 @@ def mine_chapter(story_file, chapter_file, miner_name, send = None):
         new_hash = rsa.compute_hash(json.dumps(new_block, sort_keys = True, ensure_ascii = False).encode('utf8'), 'SHA-256')
 
     try_time = get_now()-start_time
-    print('The mining took',nb_tries,'tries and',try_time+'. This is',try_time/nb_tries,'per try.')
+    print('The mining took',nb_tries,'tries and',str(try_time)+'. This is',try_time/nb_tries,'per try.')
     new_block = {'block_content': new_block.copy()}
     new_block['hash'] = new_hash.hex()
     story[str(signed_chapter_data['chapter_data']['chapter_number'])] = new_block
