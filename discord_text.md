@@ -25,10 +25,34 @@ The detailed rules of each individual story are set in the genesis block (chapte
 
 #splitTechicalities#split
 
-To use the system, users must have the files copied into their computer and install python:
-- First download the files described above. Go to the [github repository]((https://github.com/sethyvenatem/blockchain_story)) and download everything to your computer. Then the working directory (referenced above) is folder called 'python_implementation'.
+To set up the system, users must have the files copied into their computer and install python. The following steps must be followed only once:
+- First download the files described above. Go to the [github repository]((https://github.com/sethyvenatem/blockchain_story)) and download everything to your computer. If you don't change anything, the working directory (referenced above) is folder called 'python_implementation'.
 - Second, download python here: [https://www.python.org/downloads/](https://www.python.org/downloads/).
-- Install the necessary packages from
+- Install the necessary packages using the command line of your computer.
+Windows:
+-- Open the working folder, then type cmd into the folder path at the top of the window to open a command prompt.
+-- Paste in: py -m pip install -r requirements.txt and type enter.
+MacOs:
+-- right-click on the working directory.
+-- go to 'services'
+-- click 'New Terminal at Folder' or 'New iTerm2 Window Here'
+-- Paste in: 'pip install -r requirements.txt' or 'pip3 install -r requirements.txt' and then type enter.
+Linux:
+-- right-click on an empty space in the working directory and then select Open In Terminal.
+-- Paste in: 'pip install -r requirements.txt' or 'pip3 install -r requirements.txt' and then type enter.
+
+To use the system, open a terminal window in the working directory and run the python script gui.py:
+Windows:
+-- Open the working folder, then type cmd into the folder path at the top of the window to open a command prompt.
+-- Paste in: py gui.py and type enter.
+MacOs:
+-- right-click on the working directory.
+-- go to 'services'
+-- click 'New Terminal at Folder' or 'New iTerm2 Window Here'
+-- Paste in: 'python gui.py' or 'python3 gui.py' and then type enter.
+Linux:
+-- right-click on an empty space in the working directory and then select Open In Terminal.
+-- Paste in: 'python gui.py' or 'python3 gui.py' and then type enter.
 
 #splitRecommandations#split
 

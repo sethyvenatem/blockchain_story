@@ -41,4 +41,12 @@ embed.set_description(text[4])
 #Add the embed to the webhook
 webhook.add_embed(embed)
 
+embed = DiscordEmbed()
+#embed.set_author('sethyvenatem')
+#Set the title and description of the embed
+embed.set_title(text[5])
+embed.set_description(text[6])
+#Add the embed to the webhook
+webhook.add_embed(embed)
+
 webhook.execute()
