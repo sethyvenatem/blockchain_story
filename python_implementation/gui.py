@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Graphical user interface for the 3 blockchain functionalities
 #
-# 02/10python3/2023 Steven Mathey
+# 18/10python3/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -129,24 +129,24 @@ def open_mining_window(event):
             temp = temp['chapter_data']
             signed_chapters_json.append(temp)
     
-    table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_age_seconds')
+    table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_runtime_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
     table_validated_chapters.column("story_title", width=150)
     table_validated_chapters.column("chapter_number",width=150)
     table_validated_chapters.column("miner_name",width=150)
-    table_validated_chapters.column("story_age_seconds",width=150)
+    table_validated_chapters.column("story_runtime_seconds",width=150)
     
     table_validated_chapters.heading("#0",text="",)
     table_validated_chapters.heading("story_title",text="Story title")
     table_validated_chapters.heading("chapter_number",text="Last validated chapter nb")
     table_validated_chapters.heading("miner_name",text="Last miner name")
-    table_validated_chapters.heading("story_age_seconds",text="Story age")
+    table_validated_chapters.heading("story_runtime_seconds",text="Story run-time")
     
     for ind, validated_story in enumerate(validated_stories_json):
         if 'signed_chapter_data' in validated_story.keys():
-            val = (validated_story['signed_chapter_data']['chapter_data']['story_title'], validated_story['signed_chapter_data']['chapter_data']['chapter_number'],validated_story['miner_name'],validated_story['story_age_seconds'])
+            val = (validated_story['signed_chapter_data']['chapter_data']['story_title'], validated_story['signed_chapter_data']['chapter_data']['chapter_number'],validated_story['miner_name'],validated_story['story_runtime_seconds'])
         else:
-            val = (validated_story['story_title'], validated_story['chapter_number'],validated_story['miner_name'],validated_story['story_age_seconds'])
+            val = (validated_story['story_title'], validated_story['chapter_number'],validated_story['miner_name'],validated_story['story_runtime_seconds'])
         table_validated_chapters.insert(parent='',index='end',iid=ind,text='', values = val)
 #        tk.Checkbutton(text='').grid(row=1, column = 1, sticky='w')
         
@@ -377,7 +377,7 @@ var1 = tk.IntVar()
 check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server\nYou can also upload it manually later.", variable=var1,justify="left")
 lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")
 table_validated_chapters = ttk.Treeview()
-lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story age. You can scroll !",justify="left")
+lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story run-time. You can scroll !",justify="left")
 lbl_check_greeting = tk.Label(text="Select a file to check and then view.\n\nYou can scroll!")
 table_to_check = ttk.Treeview()
 but_check_file = tk.Button(text = 'Check the selected file.')

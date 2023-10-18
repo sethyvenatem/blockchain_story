@@ -50,34 +50,51 @@ embed.set_title(text[6])
 embed.set_description(text[7])
 #Add the embed to the webhook
 webhook.add_embed(embed)
-
-embed = DiscordEmbed()
-#embed.set_author('sethyvenatem')
-#Set the title and description of the embed
-embed.set_title(text[8])
-embed.set_description(text[9])
-#Add the embed to the webhook
-webhook.add_embed(embed)
-
-embed = DiscordEmbed()
-#embed.set_author('sethyvenatem')
-#Set the title and description of the embed
-embed.set_title(text[10])
-embed.set_description(text[11])
-#Add the embed to the webhook
-webhook.add_embed(embed)
-
 webhook.execute()
 
 webhook = DiscordWebhook(url=webhook_url)
-webhook.content = text[12]
+webhook.content = text[8]
 webhook.username = 'sethyvenatem'
 
 embed = DiscordEmbed()
 #embed.set_author('sethyvenatem')
 #Set the title and description of the embed
-embed.set_title(text[13])
-embed.set_description(text[14])
+embed.set_title(text[9])
+embed.set_description(text[10])
+#Add the embed to the webhook
+webhook.add_embed(embed)
+webhook.execute()
+
+webhook = DiscordWebhook(url=webhook_url)
+webhook.content = text[11]
+webhook.username = 'sethyvenatem'
+
+embed = DiscordEmbed()
+#embed.set_author('sethyvenatem')
+#Set the title and description of the embed
+embed.set_title(text[12])
+embed.set_description(text[13])
+#Add the embed to the webhook
+webhook.add_embed(embed)
+webhook.execute()
+
+webhook = DiscordWebhook(url=webhook_url)
+webhook.content = text[14]
+webhook.username = 'sethyvenatem'
+
+embed = DiscordEmbed()
+#embed.set_author('sethyvenatem')
+#Set the title and description of the embed
+embed.set_title(text[15])
+embed.set_description(text[16])
+#Add the embed to the webhook
+webhook.add_embed(embed)
+
+embed = DiscordEmbed()
+#embed.set_author('sethyvenatem')
+#Set the title and description of the embed
+embed.set_title(text[17])
+embed.set_description(text[18])
 #Add the embed to the webhook
 webhook.add_embed(embed)
 

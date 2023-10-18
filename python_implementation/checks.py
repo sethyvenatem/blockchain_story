@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Check that a given *.json is right
 #
-# 03/10/2023 Steven Mathey
+# 18/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -80,10 +80,10 @@ def check_file(file_name):
         if 'character_limits' in data.keys():
             # genesis block
             check(data['chapter_number'] == 0, 'The chapter number is not zero.')
-            check(data['story_age_seconds'] == 0.0, 'The story age is not zero.')
+            check(data['story_runtime_seconds'] == 0.0, 'The story run-time is not zero.')
             print('The provided genesis block has:')
             print('    - a consistent hash value.')
-            print('    - consistent \'chapter_number\' and \'story_age_seconds\' fields.')
+            print('    - consistent \'chapter_number\' and \'story_runtime_seconds\' fields.')
             print()
             return 'check_genesis'
 
@@ -126,7 +126,7 @@ def check_file(file_name):
         test = check(genesis['chapter_number'] == 0, 'The chapter number is not zero in the genesis block.')
         if test == 'error':
             return 'error'
-        test = check(genesis['story_age_seconds'] == 0.0, 'The story age is not zero in the genesis block.')
+        test = check(genesis['story_runtime_seconds'] == 0.0, 'The story run-time is not zero in the genesis block.')
         if test == 'error':
             return 'error'
 
@@ -163,7 +163,7 @@ def check_file(file_name):
             if test == 'error':
                 return 'error'
 
-            test = check(previous_block['story_age_seconds'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == block['story_age_seconds'], 'The story age of block '+str(block_number)+' is not calculated correctly.')
+            test = check(previous_block['story_runtime_seconds'] + round((pytz.utc.localize(dt.datetime.strptime(block['mining_date'], '%Y/%m/%d %H:%M:%S'))-pytz.utc.localize(dt.datetime.strptime(genesis['mining_date'], '%Y/%m/%d %H:%M:%S'))).total_seconds()) == block['story_runtime_seconds'], 'The story run-time of block '+str(block_number)+' is not calculated correctly.')
             if test == 'error':
                 return 'error'
 
@@ -195,7 +195,7 @@ def check_file(file_name):
             print('Each block of the provided story has:')
             print('    - consistent hash values.')
             print('    - consistent chapter numbering.')
-            print('    - consistent \'story_age_seconds\' fields.')
+            print('    - consistent \'story_runtime_seconds\' fields.')
             print('    - the hash value of the right ETH block.')
             print('    - a \'signed_chapter_data\' field with a consistent digital signature.')
             print('    - a \'chapter_data\' that is consistent with the genesis bock.')
@@ -222,7 +222,7 @@ def check_file(file_name):
             print('The provided genesis block has:')
             print('    - a consistent hash value.')
             print('    - consistent chapter numbering.')
-            print('    - consistent \'story_age_seconds\' fields.')
+            print('    - consistent \'story_runtime_seconds\' fields.')
             
             return 'check_genesis'
 

@@ -42,7 +42,7 @@ These rules are imposed with the use of different systems:
     - The miners are prevented from pre-mining a block (with a reported mining date in the future) before the set delay by the requirement that the hash value of a specific block from the [Ethereum blockchain](https://ethereum.org/en/) be present in each block (except for the genesis block). The block is defined to be the earliest block following the earliest authorised mining date.
 - The mining time is actually not recorded but is assumed to be the time interval between the current mining date and the sum of the mining date of the previous block and the mining delay. If this interval is shorter than three quarters of the intended mining time, then the difficulty parameter is decreased by one. If it is longer than five quarters of the intended mining time, then the difficulty is decreased by one. In the other cases, the difficulty parameter is not changed. With this 'definition' of the mining time, stories with chapters that are not mined immediately become easier to mine and thus attractive to new miners.
 
-In the case of a story with multiple forks, the reported mining dates are used to decide which one is final. The Bitcoin rule (the story with the largest amount of blocks wins) cannot be used here because some stories may have a predefined (and finite) number of chapters. The earliest mining date at the moment of the fork is not enough as well. Someone could rapidly mine one block and keep it secret while they mine the rest of the story. If there are multiple stories sharing the same genesis block, then the longest one has finality. If there are multiple stories with the same number of blocks, then the story age is computed as the sum (over all chapters) of the difference between the mining date and the mining date of the genesis block. The youngest story (with the smallest story age) is final.
+In the case of a story with multiple forks, the reported mining dates are used to decide which one is final. The Bitcoin rule (the story with the largest amount of blocks wins) cannot be used here because some stories may have a predefined (and finite) number of chapters. The earliest mining date at the moment of the fork is not enough as well. Someone could rapidly mine one block and keep it secret while they mine the rest of the story. If there are multiple stories sharing the same genesis block, then the longest one has finality. If there are multiple stories with the same number of blocks, then the story run-time is computed as the sum (over all chapters) of the difference between the mining date and the mining date of the genesis block. The youngest story (with the smallest story run-time) is final.
 
 ## Description of *.json files
 
@@ -50,74 +50,50 @@ This implementation of a blockchain story is managed with *.json files. The main
 
 ```json
 {
-   "0":{
-      "block_content":{
-         "author":"Steven Mathey",
-         "chapter_number":0,
-         "character_limits":{
-            "author":1000,
-            "chapter_title":150,
-            "text":30000
-         },
-         "difficulty":25,
-         "intended_mining_time_days":0.1,
-         "miner_name":"steven",
-         "mining_date":"2023/10/03 14:00:00",
-         "mining_delay_days":1,
-         "number_of_chapters":10,
-         "story_age_seconds":0,
-         "story_title":"test story"
-      },
-      "hash":"6523b69b0ef6bc30b44f1f52ee244daffcf403b8b2cac3eae47a62707087bace"
-   },
-   "1":{
-      "block_content":{
-         "difficulty":26,
-         "hash_eth":"0xaf897e7fe624d44279dddd57d4e2d98aa734b8c6f3f8c7f030aac5dac5b811d7",
-         "hash_previous_block":"6523b69b0ef6bc30b44f1f52ee244daffcf403b8b2cac3eae47a62707087bace",
-         "miner_name":"sethyvenatem",
-         "mining_date":"2023/10/04 14:50:27",
-         "nb_tries":19756505,
-         "nonce":"d9d7bc130e030a98aab9eb2ba84326a015fb9f8b2817c33dfc45cb1e0d286b8f",
-         "signed_chapter_data":{
-            "chapter_data":{
-               "author":"Steven Mathey",
-               "chapter_number":1,
-               "chapter_title":"First chapter",
-               "story_title":"test story",
-               "text":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
+    "0": {
+        "block_content": {
+            "author": "Steven Mathey",
+            "chapter_number": 0,
+            "character_limits": {
+                "author": 1000,
+                "chapter_title": 150,
+                "text": 30000
             },
-            "encrypted_hashed_chapter":"4e16ce853c68d029bcae183162cf8e6a0ee77460b084fe4d543921a215222efa6a4bc7dcacd46b2c1322f5bad2dbc7a088f6d723b668aa9f6ba4057ed8f91630258c5de9674f19b403b925c4690c708f25047b4791e6096fdcb8f5037336a0043888b1e313fd7637842fdb56848daf19f37b1844176e4594033996e982586125",
-            "public_key":"2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
-         },
-         "story_age_seconds":89427
-      },
-      "hash":"000000163f70aeeed78aac9c3846eb5eae56e092321cfe6eec80e5cce0f1af01"
-   },
-   "2":{
-      "block_content":{
-         "difficulty":25,
-         "hash_eth":"0x2be4f77f3937e69cd5ef79344023d508976c6ec6de92ec1b126360712d4ad49b",
-         "hash_previous_block":"000000163f70aeeed78aac9c3846eb5eae56e092321cfe6eec80e5cce0f1af01",
-         "miner_name":"sethyvenatem",
-         "mining_date":"2023/10/08 17:53:30",
-         "nb_tries":7790945,
-         "nonce":"0545d9552caccd45696d695bed6594acf820cb3d9d9e5f1c667993c0e3aef990",
-         "signed_chapter_data":{
-            "chapter_data":{
-               "author":"Steven Mathey",
-               "chapter_number":2,
-               "chapter_title":"second chapter",
-               "story_title":"test story",
-               "text":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
+            "difficulty": 25,
+            "intended_mining_time_days": 0.1,
+            "miner_name": "steven",
+            "mining_date": "2023/10/17 12:30:00",
+            "mining_delay_days": 1,
+            "number_of_chapters": 10,
+            "story_runtime_seconds": 0,
+            "story_title": "test story"
+        },
+        "hash": "3863e76771f2b8ce32bdcb98a30732f2efb252253f001c2b91f2ff846e68eb40"
+    },
+    "1": {
+        "block_content": {
+            "difficulty": 24,
+            "hash_eth": "0x90922e52dd22ce38e0037e7bacf2b5f418aa22930f665cb97507030e64fb22fa",
+            "hash_previous_block": "3863e76771f2b8ce32bdcb98a30732f2efb252253f001c2b91f2ff846e68eb40",
+            "miner_name": "steven",
+            "mining_date": "2023/10/18 16:11:56",
+            "nb_tries": 1266363,
+            "nonce": "175f4bf14e6c69045a1c24270319847449806df56322c308ad735b8142d8090a",
+            "signed_chapter_data": {
+                "chapter_data": {
+                    "author": "Steven Mathey",
+                    "chapter_number": 1,
+                    "chapter_title": "First chapter",
+                    "story_title": "test story",
+                    "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
+                },
+                "encrypted_hashed_chapter": "4e16ce853c68d029bcae183162cf8e6a0ee77460b084fe4d543921a215222efa6a4bc7dcacd46b2c1322f5bad2dbc7a088f6d723b668aa9f6ba4057ed8f91630258c5de9674f19b403b925c4690c708f25047b4791e6096fdcb8f5037336a0043888b1e313fd7637842fdb56848daf19f37b1844176e4594033996e982586125",
+                "public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
             },
-            "encrypted_hashed_chapter":"2585e7736c15e4c21c7559ebfc93f9eac0379744ebcfbea511ec56437f6cd54258758f279e821c2ca2a252ca122b39c223e3e7ed30ac89df06c65cd3620034f755e49491556d8ee0e2bd588993fd77a1effc1f9a19791865274b18d6c92651babcaeccd444d1137068accb71ace0deea5226399a831d55c4b6f2becfee7be9e2",
-            "public_key":"2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
-         },
-         "story_age_seconds":535437
-      },
-      "hash":"00000001cc59028f409b1a2777bc1071dd54fe5094a22187be4ab85d12cb2caa"
-   }
+            "story_runtime_seconds": 99716
+        },
+        "hash": "00000068c3c1b578b3c10747015bfa6238d32e28be5a6f547805004581aaf5fb"
+    }
 }
 ```
 
@@ -126,7 +102,7 @@ The different blocks are indexed by their 'block\_number' field (which is an int
 - 'miner\_name' This is the name of the miner and can be any string specified by the miner. It can't have any spaces.
 - 'mining\_date' This is the mining date (string with format %Y/%m/%d %H:%M:%S). The date is reported in the UTC time zone and with the seconds rounded to the closest integer. Within the restrictions discussed above, it can be set freely. It should however be the date at which the block was mined. For the genesis block, it can be set entirely freely.
 - 'difficulty' This is the mining difficulty of the next block. It is an integer between 0 and 256. For the genesis block, it can be set freely or be calculated based on the 'intended\_mining\_time' field and the speed of my computer.
-- 'story\_age\_seconds' This is the age of the story up until the corresponding block. It is an integer. It is the sum of the ages of all previous block (including the current block). The age of each block is the difference between the block mining date and the mining date of the genesis block rounded to the closest second. This field is used to determine finality in the case that multiple branches have the same number of blocks.
+- 'story\_runtime\_seconds' This is the run-time of the story up until the corresponding block. It is an integer. It is the sum of the tun-times of all previous blocks (including the current block). The run-time of each block is the difference between the block mining date and the mining date of the genesis block rounded to the closest second. This field is used to determine finality in the case that multiple branches have the same number of blocks.
 
 The genesis block (block '0') has the following special fields that are not present in the other blocks:
 
@@ -150,15 +126,15 @@ The chapter submissions are read from signed-chapter-data files. The file name p
 
 ```json
 {
-   "chapter_data":{
-      "author":"Steven Mathey",
-      "chapter_number":1,
-      "chapter_title":"First chapter",
-      "story_title":"test story",
-      "text":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
-   },
-   "encrypted_hashed_chapter":"4e16ce853c68d029bcae183162cf8e6a0ee77460b084fe4d543921a215222efa6a4bc7dcacd46b2c1322f5bad2dbc7a088f6d723b668aa9f6ba4057ed8f91630258c5de9674f19b403b925c4690c708f25047b4791e6096fdcb8f5037336a0043888b1e313fd7637842fdb56848daf19f37b1844176e4594033996e982586125",
-   "public_key":"2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
+    "chapter_data": {
+        "author": "Steven Mathey",
+        "chapter_number": 1,
+        "chapter_title": "First chapter",
+        "story_title": "test story",
+        "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
+    },
+    "encrypted_hashed_chapter": "4e16ce853c68d029bcae183162cf8e6a0ee77460b084fe4d543921a215222efa6a4bc7dcacd46b2c1322f5bad2dbc7a088f6d723b668aa9f6ba4057ed8f91630258c5de9674f19b403b925c4690c708f25047b4791e6096fdcb8f5037336a0043888b1e313fd7637842fdb56848daf19f37b1844176e4594033996e982586125",
+    "public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
 }
 ```
 These files contain 3 fields:
@@ -212,7 +188,7 @@ This script checks that the submitted data follows all the rules of the blockcha
 - The user submits unsigned chapter data. The script tries to find a genesis block in the working directory by first looking for a validated story (story title pulled from the submitted data and filename pattern \[StoryTitle\]\_\[largest\_block\_number\]\_\[mining\_date\_of\_latest\_block\].json). If this does not work, it looks for a file called genesis_block.json. If a genesis block is available, then the script checks that the submitted chapter has the right 'story\_title', 'character\_limits' and 'number\_of\_chapters'. No checks are performed if there is no genesis block available.
 - The user submits a signed chapter data. The scripts tries to find a genesis block as above and performs the same checks. Furthermore, it checks that the chapter data is signed correctly. Without a genesis block, only the digital signature is checked.
 - The user submits a single complete block. All the above checks are performed as above (except if the submitted block is number '0', genesis block). Moreover, the hash value is recalculated and compared to the provided one.
-- The user submits multiple linked blocks. The script checks that these are a list of consecutive blocks starting with block '0'. Then all the above checks are performed independently on each block (with the genesis block being block '0'). Furthermore, the script checks that all the blocks are linked correctly. In particular, it checks the chapter numbering, the story\_age\_seconds field, the hash value of the ETH block, the hash value of the previous block, the mining date, the correct application of the difficulty setting and the difficulty setting its self.
+- The user submits multiple linked blocks. The script checks that these are a list of consecutive blocks starting with block '0'. Then all the above checks are performed independently on each block (with the genesis block being block '0'). Furthermore, the script checks that all the blocks are linked correctly. In particular, it checks the chapter numbering, the story\_runtime\_seconds field, the hash value of the ETH block, the hash value of the previous block, the mining date, the correct application of the difficulty setting and the difficulty setting its self.
 
 In all cases, the submitted file must be placed in the working directory. Furthermore, unless the user submits a genesis block and if all the tests are passed, the script produces a \*.txt file with the entire submitted the story in a readable form.
 
