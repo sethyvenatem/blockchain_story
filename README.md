@@ -93,6 +93,30 @@ This implementation of a blockchain story is managed with *.json files. The main
             "story_runtime_seconds": 99716
         },
         "hash": "00000068c3c1b578b3c10747015bfa6238d32e28be5a6f547805004581aaf5fb"
+    },
+    "2": {
+        "block_content": {
+            "difficulty": 23,
+            "hash_eth": "0x2c4ed51137b725f38a4649152c28f6445c9a231bc61e4e7c082913a72f777889",
+            "hash_previous_block": "00000068c3c1b578b3c10747015bfa6238d32e28be5a6f547805004581aaf5fb",
+            "miner_name": "sethyvenatem",
+            "mining_date": "2023/10/20 08:57:41",
+            "nb_tries": 1095736,
+            "nonce": "72a2f2b0624e2445bdcb9527512daf6b1a7a9f815a2e384ff07715eec4f9783f",
+            "signed_chapter_data": {
+                "chapter_data": {
+                    "author": "Steven Mathey",
+                    "chapter_number": 2,
+                    "chapter_title": "Second chapter",
+                    "story_title": "test story",
+                    "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque aliquet, sapien sit amet cursus commodo, lorem nibh auctor augue, eget placerat metus nunc eu lorem. Aliquam lacinia porttitor arcu, sit amet tincidunt dui sodales ut. Cras id porttitor lorem, et fermentum nisi. Nam lacinia, leo non sollicitudin luctus, tellus est porta tortor, et eleifend lacus nulla in mi. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque ultricies consectetur urna, vel pharetra arcu commodo sed. Pellentesque et pellentesque augue, id hendrerit magna. Suspendisse nibh risus, maximus eget dolor ac, elementum egestas est.\n\nFusce consectetur purus at porta imperdiet. Maecenas semper ligula a risus tristique, eu sodales nunc auctor. Aenean quis ipsum purus. Maecenas rhoncus consectetur mi ut cursus. Maecenas luctus lectus quis libero fermentum convallis. Aliquam varius, quam ac condimentum eleifend, quam risus accumsan tellus, vel luctus ante nisi ut nisl. Morbi consequat diam sem, et dictum magna iaculis egestas. Aliquam et aliquet velit. Integer sed tempor dui, quis porttitor turpis. Sed pretium diam odio, in sagittis sem tempus a. Integer porta convallis tempor. Cras eget dolor non libero egestas pretium. Quisque sagittis in odio at posuere.\n\nProin a urna semper, venenatis tortor vitae, ornare lorem. Pellentesque eget nulla arcu. Quisque et dui in risus sodales porta. Quisque ac nulla sed tortor tincidunt interdum nec eget augue. Aenean tincidunt elit sit amet sapien lacinia, vitae cursus lorem vulputate. Donec efficitur, turpis posuere dignissim ullamcorper, tellus diam feugiat purus, nec molestie justo ex nec metus. Nulla tincidunt, sem vel bibendum vulputate, magna sem porta nisl, et dapibus tellus dolor ut lacus.\n"
+                },
+                "encrypted_hashed_chapter": "687a08dcafd0da13a1a918bb62610bcda9befcffcfc40b69c1bff6bab4cc9990a5d28e902495cdc898ebfcddc118cef479c27e817eb83769593234c46892bc83b680b4406f3c65d4eb02b98b4ececcc424d149d67faf3ea7c3449dfb1f06bf2e08341bdf594ea566b2c198324b27f6607063054ea75ad0e5ef362da6708eea23",
+                "public_key": "2d2d2d2d2d424547494e20525341205055424c4943204b45592d2d2d2d2d0a4d49474a416f474241496b704e436d64575273474e72754174342f57396273304f4f72624c4b30496c6f706a766e3557335437586f674238316a564c786e73480a6e357556447373506d39354c4b5277674835535775754e514649722b2b354348326f482b5571644c473261516b2b5a33594a6b57534758317678584e50724c550a4d6d30734b42345358577a724372394a6d6e6e65786643516873324c4c4d626857656e62536278776a575550366d7636416f425841674d424141453d0a2d2d2d2d2d454e4420525341205055424c4943204b45592d2d2d2d2d0a"
+            },
+            "story_runtime_seconds": 346177
+        },
+        "hash": "000000263c22a43d5bd2bffd8e8838f25a4d0dae0a409e32d71a6c8672210004"
     }
 }
 ```
