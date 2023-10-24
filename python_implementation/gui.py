@@ -1,7 +1,7 @@
 # -----------------------------------------------------------
 # Graphical user interface for the 3 blockchain functionalities
 #
-# 18/10python3/2023 Steven Mathey
+# 24/10/2023 Steven Mathey
 # email steven.mathey@gmail.ch
 # -----------------------------------------------------------
 
@@ -19,34 +19,63 @@ from mining import *
 from checks import *
 from blockchain_functions import *
 
-# use the json content to decide if it's a signed_chapter, validated story or something else.
-
 def open_chapter_signature_window(event):
     
-    lbl_greeting.grid_forget()
-    but_sign_chapter.grid_forget()
-    but_mine_chapter.grid_forget()
-    but_check_read.grid_forget()
+    welcome_window.destroy()
+    global chapter_signature_window
+    chapter_signature_window = tk.Tk()
+    chapter_signature_window.title('Chapter signature')
+    chapter_signature_window.columnconfigure([0,1,2], weight=1)
+    chapter_signature_window.rowconfigure([0,1,3,4,5], weight=1)
     
+    fr_form = tk.Frame()
+    fr_accept= tk.Frame()
+    text_boxes_widths = 50
+    lbl_sign_greeting = tk.Label(master = fr_form, text="Please fill in your chapter data here.")
+    lbl_story_title = tk.Label(master = fr_form, text="Story title:")
+    lbl_chapter_number = tk.Label(master = fr_form, text="Chapter number:")
+    lbl_chapter_title = tk.Label(master = fr_form, text="Chapter title:")
+    lbl_author_name = tk.Label(master = fr_form, text="Author name:")
+    lbl_chapter_text = tk.Label(master = fr_form, text="Chapter text (this window does not check for typos!):")
+    lbl_above_accept = tk.Label(master = fr_accept, text='Click below to digitally sign your chapter submission')
+    lbl_below_accept = tk.Label(master = fr_accept, text='Be careful that:\n - The story title field is correct.\n - The chapter number is correct.\n - There are no typos in you submission.',justify="left")
+    global ent_story_title 
+    ent_story_title= tk.Entry(master = fr_form, width = text_boxes_widths)
+    global ent_chapter_number
+    ent_chapter_number = tk.Entry(master = fr_form, width = text_boxes_widths)
+    global ent_chapter_title
+    ent_chapter_title = tk.Entry(master = fr_form, width = text_boxes_widths)
+    global ent_author_name
+    ent_author_name = tk.Entry(master = fr_form, width = text_boxes_widths)
+    but_accept_entry = tk.Button(master = fr_accept, text = 'Sign it!')
+    # thanks https://stackoverflow.com/questions/13832720/how-to-attach-a-scrollbar-to-a-text-widget
+    global scroll_txt
+    scroll_txt = scrolledtext.ScrolledText(master = fr_form, width = text_boxes_widths, height = text_boxes_widths)
+        
     # Place the widgets on the window
-    lbl_sign_greeting.grid(row = 0, column = 1, sticky='ew', pady = 10)
+    lbl_sign_greeting.grid(row = 0, column = 1, pady = 10, sticky='ew')
     lbl_story_title.grid(row = 1, column = 0, sticky='w')
     lbl_chapter_number.grid(row = 2, column = 0, sticky='w')
     lbl_chapter_title.grid(row = 3, column = 0, sticky='w')
     lbl_author_name.grid(row = 4, column = 0, sticky='w')
     lbl_chapter_text.grid(row = 5, column = 0, sticky='nw')
-    lbl_above_accept.grid(row = 0, column = 2, sticky = 'nw', padx = 10, pady = 10)
+    lbl_above_accept.grid(row = 0, column = 2, padx = 10, pady = 10, sticky = 'nw')
     lbl_below_accept.grid(row = 2, column = 2)
-    ent_story_title.grid(row = 1, column = 1, sticky='EW', padx=10)
-    ent_chapter_number.grid(row = 2, column = 1, sticky='EW', padx=10)
-    ent_chapter_title.grid(row = 3, column = 1, sticky='EW', padx=10)
-    ent_author_name.grid(row = 4, column = 1, sticky='EW', padx=10)
-    but_accept_entry.grid(row = 1, column = 2)
-    scroll_txt.grid(row = 5, column = 1, sticky='EW', padx=10)
-    
-    fr_form.grid(row = 0, column = 0, sticky = 'nw', padx = 10, pady = 10)
-    fr_accept.grid(row = 0, column = 1, sticky = 'nw', pady = 10)
+    ent_story_title.grid(row = 1, column = 1, padx=10, sticky='EW')
+    ent_chapter_number.grid(row = 2, column = 1, padx=10, sticky='EW')
+    ent_chapter_title.grid(row = 3, column = 1, padx=10, sticky='EW')
+    ent_author_name.grid(row = 4, column = 1, padx=10, sticky='EW')
 
+    but_accept_entry.grid(row = 1, column = 2)
+    scroll_txt.grid(row = 5, column = 1, padx=10, sticky='EW')
+    
+    fr_form.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
+    fr_accept.grid(row = 0, column = 1, pady = 10, sticky = 'nw')
+    
+    but_accept_entry.bind("<Button-1>", run_chapter_signature)
+    
+    chapter_signature_window.mainloop()
+    
 def run_chapter_signature(event):
     
     story_title = ent_story_title.get()
@@ -72,25 +101,15 @@ def run_chapter_signature(event):
     result_string = result.getvalue()
     sys.stdout = old_stdout
     
+    chapter_signature_window.destroy()
+    signed_chapter_window = tk.Tk()
+    signed_chapter_window.title('Signed chapter')
+    signed_chapter_window.columnconfigure(0, weight=1)
+    signed_chapter_window.rowconfigure([0,1], weight=1)
+    
+    lbl_signed_chapter_data = tk.Label(text = 'Your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
     if status == 'error':
         lbl_signed_chapter_data.config(text = 'Oups, something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
-
-    lbl_sign_greeting.grid_forget()
-    lbl_story_title.grid_forget()
-    lbl_chapter_number.grid_forget()
-    lbl_chapter_title.grid_forget()
-    lbl_author_name.grid_forget()
-    lbl_chapter_text.grid_forget()
-    lbl_above_accept.grid_forget()
-    lbl_below_accept.grid_forget()
-    ent_story_title.grid_forget()
-    ent_chapter_number.grid_forget()
-    ent_chapter_title.grid_forget()
-    ent_author_name.grid_forget()
-    but_accept_entry.grid_forget()
-    scroll_txt.grid_forget()
-    fr_form.grid_forget()
-    fr_accept.grid_forget()
     
     scroll_sign_messages = scrolledtext.ScrolledText()
     scroll_sign_messages.insert("1.0", result_string)
@@ -98,13 +117,18 @@ def run_chapter_signature(event):
     scroll_sign_messages.grid(row = 1, column = 0,sticky = 'n', padx=10)
     os.remove('temp_chapter_data.json')
     
-def open_mining_window(event):
-
-    lbl_greeting.grid_forget()
-    but_sign_chapter.grid_forget()
-    but_mine_chapter.grid_forget()
-    but_check_read.grid_forget()
+    signed_chapter_window.mainloop()
     
+def open_mining_window(event):
+    
+    welcome_window.destroy()
+    global mining_window
+    mining_window = tk.Tk()
+    mining_window.title('Chapter mining')
+    mining_window.columnconfigure([0,1,2], weight=1)
+    mining_window.rowconfigure([0,1,2,3,4,5,6], weight=1)
+    
+    lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story run-time. You can scroll !",justify="left")
     lbl_story_choice.grid(row = 0, column = 0, sticky = 'nw', padx = 10)
     
     json_files = glob.glob('*.json')
@@ -129,6 +153,7 @@ def open_mining_window(event):
             temp = temp['chapter_data']
             signed_chapters_json.append(temp)
     
+    table_validated_chapters = ttk.Treeview()
     table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_runtime_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
     table_validated_chapters.column("story_title", width=150)
@@ -148,7 +173,6 @@ def open_mining_window(event):
         else:
             val = (validated_story['story_title'], validated_story['chapter_number'],validated_story['miner_name'],validated_story['story_runtime_seconds'])
         table_validated_chapters.insert(parent='',index='end',iid=ind,text='', values = val)
-#        tk.Checkbutton(text='').grid(row=1, column = 1, sticky='w')
         
     table_validated_chapters.grid(row = 1,column = 0, padx = 10, pady = 10)
 
@@ -160,8 +184,10 @@ def open_mining_window(event):
 
     table_validated_chapters.bind('<ButtonRelease-1>', get_validated_story_file)
 
+    lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")
     lbl_chapter_choice.grid(row = 2, column = 0, sticky = 'nw', padx = 10)
     
+    table_signed_chapters = ttk.Treeview()
     table_signed_chapters['columns'] = ('story_title', 'chapter_number', 'author', 'chapter_title')
     table_signed_chapters.column("#0", width=0, stretch='NO')
     table_signed_chapters.column("story_title", width=150)
@@ -188,14 +214,24 @@ def open_mining_window(event):
     
     table_signed_chapters.bind('<ButtonRelease-1>', get_signed_chapter_file)
     
+    lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
     lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
+    global ent_miner_name
+    ent_miner_name = tk.Entry(width = 50)
     ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
     
+    global var1
+    var1 = tk.IntVar()
+    check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server\nYou can also upload it manually later.", variable=var1,justify="left")
     check_send_to_discord.grid(row = 1,column = 2, padx = 10, pady = 10, sticky = 'nw')
+    but_start_mining = tk.Button(text = 'Start mining! This will take some time. Be patient.')
     but_start_mining.grid(row = 0, column = 2,padx = 10, pady = 10)
+    but_start_mining.bind("<Button-1>", run_mining)
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
     #to make table: https://pythonguides.com/python-tkinter-table-tutorial/
+    
+    mining_window.mainloop()
     
 def run_mining(event):
     
@@ -205,14 +241,12 @@ def run_mining(event):
         send = 'yes'
     else:
         send = 'no'
-    but_start_mining.grid_forget()
-    ent_miner_name.grid_forget()
-    lbl_miner_name.grid_forget()
-    table_signed_chapters.grid_forget()
-    lbl_chapter_choice.grid_forget()
-    table_validated_chapters.grid_forget()
-    lbl_story_choice.grid_forget()
-    check_send_to_discord.grid_forget()
+
+    mining_window.destroy()
+    mined_chapter_window = tk.Tk()
+    mined_chapter_window.title('Mined chapter')
+    mined_chapter_window.columnconfigure(0, weight=1)
+    mined_chapter_window.rowconfigure([0,1], weight=1)
     
     old_stdout = sys.stdout
     result = StringIO()
@@ -230,19 +264,25 @@ def run_mining(event):
     lbl_mined_chapter.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
     
-def open_check_window(event):
-
-    lbl_greeting.grid_forget()
-    but_sign_chapter.grid_forget()
-    but_mine_chapter.grid_forget()
-    but_check_read.grid_forget()
+    mined_chapter_window.mainloop()
     
+def open_check_window(event):
+    
+    welcome_window.destroy()
+    global check_window
+    check_window = tk.Tk()
+    check_window.title('Check file')
+    check_window.columnconfigure(0, weight=1)
+    check_window.rowconfigure([0,1,2], weight=1)
+    
+    lbl_check_greeting = tk.Label(text="Select a file to check and then view.\n\nYou can scroll!")
     lbl_check_greeting.grid(row = 0, column = 0, padx = 10, pady = 10)
     
     file_names = sorted(glob.glob('*.json'))
     file_names.reverse()
     json_files = [import_json(f, False) for f in file_names]
     
+    table_to_check = ttk.Treeview()
     table_to_check['columns'] = ('file_type', 'story_title', 'chapter_number', 'chapter_title', 'author')
     table_to_check.column("#0", width=0, stretch='NO')
     table_to_check.column("file_type", width=150)
@@ -294,13 +334,19 @@ def open_check_window(event):
     table_to_check.bind('<ButtonRelease-1>', get_file_to_check)
     
     table_to_check.grid(row = 1, column = 0, padx = 10, pady = 10)
+    but_check_file = tk.Button(text = 'Check the selected file.')
+    but_check_file.bind("<Button-1>", run_checks)
     but_check_file.grid(row = 2, column = 0, padx = 10, pady = 10)
-
+    
+    check_window.mainloop()
+    
 def run_checks(event):
     
-    lbl_check_greeting.grid_forget()
-    table_to_check.grid_forget()
-    but_check_file.grid_forget()
+    check_window.destroy()
+    checked_window = tk.Tk()
+    checked_window.title('File checked')
+    checked_window.columnconfigure([0,1], weight=1)
+    checked_window.rowconfigure([0,1], weight=1)
     
     old_stdout = sys.stdout
     result = StringIO()
@@ -328,61 +374,29 @@ def run_checks(event):
     lbl_checked_file.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
     
-window = tk.Tk()
+    checked_window.mainloop()
+    
+welcome_window = tk.Tk()
+welcome_window.title('What to do...')
+welcome_window.columnconfigure([0,1,2], weight=1)
+welcome_window.rowconfigure([0,1], weight=1)
+welcome_window.eval('tk::PlaceWindow . center')
+    
 lbl_greeting = tk.Label(text="What do you want to do?")
 but_sign_chapter = tk.Button(text = 'Digiatlly sign a chapter')
 but_mine_chapter = tk.Button(text = 'Attempt to mine a chapter')
 but_check_read = tk.Button(text = 'Check a json file and read it\'s content')
 
-# Define all the widgets to appear on the first chapter signature window
-fr_form = tk.Frame()
-fr_accept= tk.Frame()
-text_boxes_widths = 50
-lbl_sign_greeting = tk.Label(master = fr_form, text="Please fill in your chapter data here.")
-lbl_story_title = tk.Label(master = fr_form, text="Story title:")
-lbl_chapter_number = tk.Label(master = fr_form, text="Chapter number:")
-lbl_chapter_title = tk.Label(master = fr_form, text="Chapter title:")
-lbl_author_name = tk.Label(master = fr_form, text="Author name:")
-lbl_chapter_text = tk.Label(master = fr_form, text="Chapter text (this window does not check for typos!):")
-lbl_above_accept = tk.Label(master = fr_accept, text='Click below to digitally sign your chapter submission')
-lbl_below_accept = tk.Label(master = fr_accept, text='Be careful that:\n - The story title field is correct.\n - The chapter number is correct.\n - There are no typos in you submission.',justify="left")
-ent_story_title = tk.Entry(master = fr_form, width = text_boxes_widths)
-ent_chapter_number = tk.Entry(master = fr_form, width = text_boxes_widths)
-ent_chapter_title = tk.Entry(master = fr_form, width = text_boxes_widths)
-ent_author_name = tk.Entry(master = fr_form, width = text_boxes_widths)
-but_accept_entry = tk.Button(master = fr_accept, text = 'Sign it!')
-# thanks https://stackoverflow.com/questions/13832720/how-to-attach-a-scrollbar-to-a-text-widget
-scroll_txt = scrolledtext.ScrolledText(master = fr_form, width = text_boxes_widths, height = text_boxes_widths)
-
-lbl_signed_chapter_data = tk.Label(text = 'Your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
-
-lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
-but_start_mining = tk.Button(text = 'Start mining! This will take some time. Be patient.')
-
 lbl_greeting.grid(row = 0, column = 1)
-but_sign_chapter.grid(row=1, column=0)
-but_mine_chapter.grid(row=1, column=1)
-but_check_read.grid(row=1, column=2)
+but_sign_chapter.grid(row=1, column=0, pady = 10, padx = 10)
+but_mine_chapter.grid(row=1, column=1, pady = 10, padx = 10)
+but_check_read.grid(row=1, column=2, pady = 10, padx = 10)
 
 but_sign_chapter.bind("<Button-1>", open_chapter_signature_window)
 but_mine_chapter.bind("<Button-1>", open_mining_window)
 but_check_read.bind("<Button-1>", open_check_window)
     
-but_accept_entry.bind("<Button-1>", run_chapter_signature)
-
-but_start_mining.bind("<Button-1>", run_mining)
-table_signed_chapters = ttk.Treeview()
-ent_miner_name = tk.Entry(width = 50)
-var1 = tk.IntVar()
-check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server\nYou can also upload it manually later.", variable=var1,justify="left")
-lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")
-table_validated_chapters = ttk.Treeview()
-lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story run-time. You can scroll !",justify="left")
-lbl_check_greeting = tk.Label(text="Select a file to check and then view.\n\nYou can scroll!")
-table_to_check = ttk.Treeview()
-but_check_file = tk.Button(text = 'Check the selected file.')
-but_check_file.bind("<Button-1>", run_checks)
-window.mainloop()
+welcome_window.mainloop()
 
 # https://realpython.com/python-gui-tkinter/
 # https://www.askpython.com/python-modules/tkinter/tkinter-text-widget-tkinter-scrollbar
