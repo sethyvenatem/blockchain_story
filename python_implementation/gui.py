@@ -381,7 +381,7 @@ welcome_window.title('What to do...')
 welcome_window.columnconfigure([0,1,2], weight=1)
 welcome_window.rowconfigure([0,1], weight=1)
 welcome_window.eval('tk::PlaceWindow . center')
-    
+
 lbl_greeting = tk.Label(text="What do you want to do?")
 but_sign_chapter = tk.Button(text = 'Digiatlly sign a chapter')
 but_mine_chapter = tk.Button(text = 'Attempt to mine a chapter')
