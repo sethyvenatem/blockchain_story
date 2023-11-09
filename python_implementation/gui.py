@@ -13,64 +13,120 @@ import os
 import glob
 import sys
 from io import StringIO
+#from tkinter.tix import *
+#from tkinter.ttk import *
 
 from chapter_signature import *
 from mining import *
 from checks import *
 from blockchain_functions import *
 
+class ScrollableFrame:
+    # thanks https://stackoverflow.com/questions/1844995/how-to-add-a-scrollbar-to-a-window-with-tkinter?answertab=modifieddesc#tab-top
+    """
+    # How to use class
+    from tkinter import *
+    obj = ScrollableFrame(master,height=300 # Total required height of canvas,width=400 # Total width of master)
+    objframe = obj.frame
+    # use objframe as the main window to make widget
+    """
+    def __init__ (self,master,width,height,mousescroll=0):
+        self.mousescroll = mousescroll
+        self.master = master
+        self.height = height
+        self.width = width
+        self.main_frame = tk.Frame(self.master)
+        self.main_frame.pack(fill='both',expand=1)
+
+        self.scrollbar = tk.Scrollbar(self.main_frame, orient= 'vertical')
+        self.scrollbar.pack(side='right',fill='y')
+
+        self.canvas = tk.Canvas(self.main_frame,yscrollcommand=self.scrollbar.set)
+        self.canvas.pack(expand=True,fill='both')
+
+        self.scrollbar.config(command=self.canvas.yview)
+
+        self.canvas.bind('<Configure>', lambda e: self.canvas.configure(scrollregion = self.canvas.bbox("all")))
+
+        self.frame = tk.Frame(self.canvas,width=self.width,height=self.height)
+        self.frame.pack(expand=True,fill='both')
+        self.canvas.create_window((0,0), window=self.frame, anchor="nw")
+
+        self.frame.bind("<Enter>", self.entered)
+        self.frame.bind("<Leave>", self.left)
+        
+
+    def _on_mouse_wheel(self,event):
+        self.canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
+
+    def entered(self,event):
+        if self.mousescroll:
+            self.canvas.bind_all("<MouseWheel>", self._on_mouse_wheel)
+
+    def left(self,event):
+        if self.mousescroll:
+            self.canvas.unbind_all("<MouseWheel>")
+
 def open_chapter_signature_window(event):
     
     welcome_window.destroy()
     global chapter_signature_window
     chapter_signature_window = tk.Tk()
+    #Just set the nb of pixels below small enough!
+    chapter_signature_window.geometry("800x600")
     chapter_signature_window.title('Chapter signature')
-    chapter_signature_window.columnconfigure([0,1,2], weight=1)
-    chapter_signature_window.rowconfigure([0,1,3,4,5], weight=1)
+
+    chapter_signature_frame_scroll = ScrollableFrame(chapter_signature_window,height=800 ,width=600)
+    chapter_signature_frame = chapter_signature_frame_scroll.frame
+
+    Do this above in the class definition. Do it to the canvas
+    chapter_signature_window.rowconfigure([0], weight=1)
+    chapter_signature_window.columnconfigure([0], weight=1)
+    chapter_signature_frame.rowconfigure([0,1,2,3,4,5], weight=1)
+    chapter_signature_frame.columnconfigure([0,1], weight=1)
     
-    fr_form = tk.Frame()
-    fr_accept= tk.Frame()
-    text_boxes_widths = 50
-    lbl_sign_greeting = tk.Label(master = fr_form, text="Please fill in your chapter data here.")
-    lbl_story_title = tk.Label(master = fr_form, text="Story title:")
-    lbl_chapter_number = tk.Label(master = fr_form, text="Chapter number:")
-    lbl_chapter_title = tk.Label(master = fr_form, text="Chapter title:")
-    lbl_author_name = tk.Label(master = fr_form, text="Author name:")
-    lbl_chapter_text = tk.Label(master = fr_form, text="Chapter text (this window does not check for typos!):")
+    fr_accept= tk.Frame(master = chapter_signature_frame, highlightbackground="black", highlightthickness=2)
+    text_boxes_widths = 40
+    lbl_sign_greeting = tk.Label(master = chapter_signature_frame, text="Please fill in your chapter data here.")
+    lbl_story_title = tk.Label(master = chapter_signature_frame, text="Story title:")
+    lbl_chapter_number = tk.Label(master = chapter_signature_frame, text="Chapter number:")
+    lbl_chapter_title = tk.Label(master = chapter_signature_frame, text="Chapter title:")
+    lbl_author_name = tk.Label(master = chapter_signature_frame, text="Author name:")
+    lbl_chapter_text = tk.Label(master = chapter_signature_frame, text="Chapter text (no spell-check here!):")
     lbl_above_accept = tk.Label(master = fr_accept, text='Click below to digitally sign your chapter submission')
     lbl_below_accept = tk.Label(master = fr_accept, text='Be careful that:\n - The story title field is correct.\n - The chapter number is correct.\n - There are no typos in you submission.',justify="left")
     global ent_story_title 
-    ent_story_title= tk.Entry(master = fr_form, width = text_boxes_widths)
+    ent_story_title= tk.Entry(master = chapter_signature_frame, width = text_boxes_widths)
     global ent_chapter_number
-    ent_chapter_number = tk.Entry(master = fr_form, width = text_boxes_widths)
+    ent_chapter_number = tk.Entry(master = chapter_signature_frame, width = text_boxes_widths)
     global ent_chapter_title
-    ent_chapter_title = tk.Entry(master = fr_form, width = text_boxes_widths)
+    ent_chapter_title = tk.Entry(master = chapter_signature_frame, width = text_boxes_widths)
     global ent_author_name
-    ent_author_name = tk.Entry(master = fr_form, width = text_boxes_widths)
+    ent_author_name = tk.Entry(master = chapter_signature_frame, width = text_boxes_widths)
     but_accept_entry = tk.Button(master = fr_accept, text = 'Sign it!')
     # thanks https://stackoverflow.com/questions/13832720/how-to-attach-a-scrollbar-to-a-text-widget
     global scroll_txt
-    scroll_txt = scrolledtext.ScrolledText(master = fr_form, width = text_boxes_widths, height = text_boxes_widths)
+    scroll_txt = scrolledtext.ScrolledText(master = chapter_signature_frame, width = text_boxes_widths, height = 30)
         
     # Place the widgets on the window
     lbl_sign_greeting.grid(row = 0, column = 1, pady = 10, sticky='ew')
-    lbl_story_title.grid(row = 1, column = 0, sticky='w')
-    lbl_chapter_number.grid(row = 2, column = 0, sticky='w')
-    lbl_chapter_title.grid(row = 3, column = 0, sticky='w')
-    lbl_author_name.grid(row = 4, column = 0, sticky='w')
-    lbl_chapter_text.grid(row = 5, column = 0, sticky='nw')
-    lbl_above_accept.grid(row = 0, column = 2, padx = 10, pady = 10, sticky = 'nw')
-    lbl_below_accept.grid(row = 2, column = 2)
+    lbl_story_title.grid(row = 1, column = 0, padx = 10, sticky='w')
+    lbl_chapter_number.grid(row = 2, column = 0, padx = 10, sticky='w')
+    lbl_chapter_title.grid(row = 3, column = 0, padx = 10, sticky='w')
+    lbl_author_name.grid(row = 4, column = 0, padx = 10, sticky='w')
+    lbl_chapter_text.grid(row = 5, column = 0, padx = 10, sticky='nw')
     ent_story_title.grid(row = 1, column = 1, padx=10, sticky='EW')
     ent_chapter_number.grid(row = 2, column = 1, padx=10, sticky='EW')
     ent_chapter_title.grid(row = 3, column = 1, padx=10, sticky='EW')
     ent_author_name.grid(row = 4, column = 1, padx=10, sticky='EW')
 
-    but_accept_entry.grid(row = 1, column = 2)
     scroll_txt.grid(row = 5, column = 1, padx=10, sticky='EW')
     
-    fr_form.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
-    fr_accept.grid(row = 0, column = 1, pady = 10, sticky = 'nw')
+    lbl_above_accept.grid(row = 0, column = 0, padx = 10, pady = 10, sticky = 'nw')
+    lbl_below_accept.grid(row = 1, column = 0)
+    but_accept_entry.grid(row = 2, column = 0, pady = 10)
+
+    fr_accept.grid(row = 5, column = 0, pady = 60, padx = 10, sticky = 'nw')
     
     but_accept_entry.bind("<Button-1>", run_chapter_signature)
     
