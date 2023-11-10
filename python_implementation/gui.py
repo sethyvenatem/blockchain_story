@@ -37,12 +37,18 @@ class ScrollableFrame:
         self.width = width
         self.main_frame = tk.Frame(self.master)
         self.main_frame.pack(fill='both',expand=1)
+#        self.main_frame.grid(row = 0,column = 0, sticky='nsew')
+        #self.main_frame.rowconfigure([0], weight=1)
+        #self.main_frame.columnconfigure([0], weight=1)
 
         self.scrollbar = tk.Scrollbar(self.main_frame, orient= 'vertical')
         self.scrollbar.pack(side='right',fill='y')
 
         self.canvas = tk.Canvas(self.main_frame,yscrollcommand=self.scrollbar.set)
         self.canvas.pack(expand=True,fill='both')
+        #self.canvas.grid(row = 0,column = 0, sticky='nsew')
+        #self.canvas.rowconfigure([0], weight=1)
+        #self.canvas.columnconfigure([0], weight=1)
 
         self.scrollbar.config(command=self.canvas.yview)
 
@@ -54,7 +60,6 @@ class ScrollableFrame:
 
         self.frame.bind("<Enter>", self.entered)
         self.frame.bind("<Leave>", self.left)
-        
 
     def _on_mouse_wheel(self,event):
         self.canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
@@ -78,13 +83,19 @@ def open_chapter_signature_window(event):
 
     chapter_signature_frame_scroll = ScrollableFrame(chapter_signature_window,height=800 ,width=600)
     chapter_signature_frame = chapter_signature_frame_scroll.frame
+ #   chapter_signature_frame = tk.Frame(chapter_signature_window)
+ #   chapter_signature_frame.grid(row = 0,column = 0)
 
-    Do this above in the class definition. Do it to the canvas
+    #Do this above in the class definition. Do it to the canvas
     chapter_signature_window.rowconfigure([0], weight=1)
     chapter_signature_window.columnconfigure([0], weight=1)
+#    chapter_signature_frame_scroll.main_frame.rowconfigure([0], weight=1)
+#    chapter_signature_frame_scroll.main_frame.columnconfigure([0], weight=1)
+#    chapter_signature_frame_scroll.canvas.rowconfigure([0], weight=1)
+#    chapter_signature_frame_scroll.canvas.columnconfigure([0], weight=1)
     chapter_signature_frame.rowconfigure([0,1,2,3,4,5], weight=1)
     chapter_signature_frame.columnconfigure([0,1], weight=1)
-    
+
     fr_accept= tk.Frame(master = chapter_signature_frame, highlightbackground="black", highlightthickness=2)
     text_boxes_widths = 40
     lbl_sign_greeting = tk.Label(master = chapter_signature_frame, text="Please fill in your chapter data here.")
