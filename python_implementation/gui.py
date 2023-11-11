@@ -37,19 +37,13 @@ class ScrollableFrame:
         self.width = width
         self.main_frame = tk.Frame(self.master)
         self.main_frame.pack(fill='both',expand=1)
-#        self.main_frame.grid(row = 0,column = 0, sticky='nsew')
-        #self.main_frame.rowconfigure([0], weight=1)
-        #self.main_frame.columnconfigure([0], weight=1)
 
         self.scrollbar = tk.Scrollbar(self.main_frame, orient= 'vertical')
         self.scrollbar.pack(side='right',fill='y')
 
         self.canvas = tk.Canvas(self.main_frame,yscrollcommand=self.scrollbar.set)
         self.canvas.pack(expand=True,fill='both')
-        #self.canvas.grid(row = 0,column = 0, sticky='nsew')
-        #self.canvas.rowconfigure([0], weight=1)
-        #self.canvas.columnconfigure([0], weight=1)
-
+ 
         self.scrollbar.config(command=self.canvas.yview)
 
         self.canvas.bind('<Configure>', lambda e: self.canvas.configure(scrollregion = self.canvas.bbox("all")))
@@ -87,14 +81,14 @@ def open_chapter_signature_window(event):
  #   chapter_signature_frame.grid(row = 0,column = 0)
 
     #Do this above in the class definition. Do it to the canvas
-    chapter_signature_window.rowconfigure([0], weight=1)
-    chapter_signature_window.columnconfigure([0], weight=1)
+#    chapter_signature_window.rowconfigure([0], weight=1)
+#    chapter_signature_window.columnconfigure([0], weight=1)
 #    chapter_signature_frame_scroll.main_frame.rowconfigure([0], weight=1)
 #    chapter_signature_frame_scroll.main_frame.columnconfigure([0], weight=1)
 #    chapter_signature_frame_scroll.canvas.rowconfigure([0], weight=1)
 #    chapter_signature_frame_scroll.canvas.columnconfigure([0], weight=1)
-    chapter_signature_frame.rowconfigure([0,1,2,3,4,5], weight=1)
-    chapter_signature_frame.columnconfigure([0,1], weight=1)
+ #   chapter_signature_frame.rowconfigure([0,1,2,3,4,5], weight=1)
+#    chapter_signature_frame.columnconfigure([0,1], weight=1)
 
     fr_accept= tk.Frame(master = chapter_signature_frame, highlightbackground="black", highlightthickness=2)
     text_boxes_widths = 40
@@ -192,10 +186,15 @@ def open_mining_window(event):
     global mining_window
     mining_window = tk.Tk()
     mining_window.title('Chapter mining')
-    mining_window.columnconfigure([0,1,2], weight=1)
-    mining_window.rowconfigure([0,1,2,3,4,5,6], weight=1)
+    mining_window.geometry("800x600")
+    #mining_window.columnconfigure([0,1], weight=1)
+    #mining_window.rowconfigure([0,1,2,3,4,5], weight=1)
+
+    mining_window_frame_scroll = ScrollableFrame(mining_window,height=800 ,width=600)
+    mining_window_frame = mining_window_frame_scroll.frame
     
-    lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story run-time. You can scroll !",justify="left")
+    lbl_story_choice = tk.Label(master = mining_window_frame, text="Select an unfinished validated story below. This is the story\nto which you want to add a new chapter. Pick the story with\nthe right title and the largest number of chapters. If multiple\nstories have the same title and number of chapters, then pick\nthe one with the smallest story run-time. You can scroll!",justify="left")
+#    lbl_story_choice = tk.Label(text="Select an unfinished validated story below. This is the story to which you want to add a new chapter.\n\nPick the story with:\n - the right title.\n - the largest number of chapters.\n \nIf multiple stories have the same title and number of chapters, then pick the one with the smallest story run-time. You can scroll !",justify="left")
     lbl_story_choice.grid(row = 0, column = 0, sticky = 'nw', padx = 10)
     
     json_files = glob.glob('*.json')
@@ -220,17 +219,18 @@ def open_mining_window(event):
             temp = temp['chapter_data']
             signed_chapters_json.append(temp)
     
-    table_validated_chapters = ttk.Treeview()
+    table_validated_chapters = ttk.Treeview(master = mining_window_frame, )
+
     table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_runtime_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
-    table_validated_chapters.column("story_title", width=150)
-    table_validated_chapters.column("chapter_number",width=150)
-    table_validated_chapters.column("miner_name",width=150)
-    table_validated_chapters.column("story_runtime_seconds",width=150)
+    table_validated_chapters.column("story_title", width=100)
+    table_validated_chapters.column("chapter_number",width=70)
+    table_validated_chapters.column("miner_name",width=100)
+    table_validated_chapters.column("story_runtime_seconds",width=85)
     
     table_validated_chapters.heading("#0",text="",)
     table_validated_chapters.heading("story_title",text="Story title")
-    table_validated_chapters.heading("chapter_number",text="Last validated chapter nb")
+    table_validated_chapters.heading("chapter_number",text="Chapters")
     table_validated_chapters.heading("miner_name",text="Last miner name")
     table_validated_chapters.heading("story_runtime_seconds",text="Story run-time")
     
@@ -251,20 +251,21 @@ def open_mining_window(event):
 
     table_validated_chapters.bind('<ButtonRelease-1>', get_validated_story_file)
 
-    lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")
-    lbl_chapter_choice.grid(row = 2, column = 0, sticky = 'nw', padx = 10)
+    lbl_chapter_choice = tk.Label(master = mining_window_frame, text="Select a signed chapter below. This is the chapter that you want\nto add to the story. Pick the story with the right title and the right\nchapter number. You can scroll!",justify="left")
+#    lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")    
+    lbl_chapter_choice.grid(row = 2, column = 0,  padx = 10)
     
-    table_signed_chapters = ttk.Treeview()
+    table_signed_chapters = ttk.Treeview(master = mining_window_frame)
     table_signed_chapters['columns'] = ('story_title', 'chapter_number', 'author', 'chapter_title')
     table_signed_chapters.column("#0", width=0, stretch='NO')
-    table_signed_chapters.column("story_title", width=150)
-    table_signed_chapters.column("chapter_number",width=150)
-    table_signed_chapters.column("author",width=150)
-    table_signed_chapters.column("chapter_title",width=150)
+    table_signed_chapters.column("story_title", width=100)
+    table_signed_chapters.column("chapter_number",width=60)
+    table_signed_chapters.column("author",width=100)
+    table_signed_chapters.column("chapter_title",width=120)
     
     table_signed_chapters.heading("#0",text="",)
     table_signed_chapters.heading("story_title",text="Story title")
-    table_signed_chapters.heading("chapter_number",text="Chapter number")
+    table_signed_chapters.heading("chapter_number",text="Chapter")
     table_signed_chapters.heading("author",text="Author")
     table_signed_chapters.heading("chapter_title",text="Chapter title")
     
@@ -281,18 +282,18 @@ def open_mining_window(event):
     
     table_signed_chapters.bind('<ButtonRelease-1>', get_signed_chapter_file)
     
-    lbl_miner_name = tk.Label(text="Enter your miner name",justify="left")
-    lbl_miner_name.grid(row = 5, column = 0, sticky = 'nw', padx = 10)
+    lbl_miner_name = tk.Label(master = mining_window_frame, text="Enter your miner name:",justify="left")
+    lbl_miner_name.grid(row = 0, column = 1, sticky = 'ws', padx = 10)
     global ent_miner_name
-    ent_miner_name = tk.Entry(width = 50)
-    ent_miner_name.grid(row = 6, column = 0, sticky = 'nw', padx = 10, pady = 10)
+    ent_miner_name = tk.Entry(master = mining_window_frame, width = 25)
+    ent_miner_name.grid(row = 1, column = 1, sticky = 'nw', padx = 10, pady = 10)
     
     global var1
-    var1 = tk.IntVar()
-    check_send_to_discord = tk.Checkbutton(text="Automatically send the validated file to the discord server\nYou can also upload it manually later.", variable=var1,justify="left")
-    check_send_to_discord.grid(row = 1,column = 2, padx = 10, pady = 10, sticky = 'nw')
-    but_start_mining = tk.Button(text = 'Start mining! This will take some time. Be patient.')
-    but_start_mining.grid(row = 0, column = 2,padx = 10, pady = 10)
+    var1 = tk.IntVar(master = mining_window_frame, )
+    check_send_to_discord = tk.Checkbutton(master = mining_window_frame, text="Automatically send the validated file to\nthe discord server. You can also\nupload it manually later.", variable=var1,justify="left")
+    check_send_to_discord.grid(row = 2,column = 1, padx = 10, pady = 10, sticky = 'nw')
+    but_start_mining = tk.Button(master = mining_window_frame, text = 'Start mining! This will take some time.')
+    but_start_mining.grid(row = 3, column = 1,padx = 10, pady = 10)
     but_start_mining.bind("<Button-1>", run_mining)
     #https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
     # to make tickboxes: https://python-course.eu/tkinter/checkboxes-in-tkinter.php
