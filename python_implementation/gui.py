@@ -165,14 +165,17 @@ def run_chapter_signature(event):
     chapter_signature_window.destroy()
     signed_chapter_window = tk.Tk()
     signed_chapter_window.title('Signed chapter')
-    signed_chapter_window.columnconfigure(0, weight=1)
-    signed_chapter_window.rowconfigure([0,1], weight=1)
+    signed_chapter_window.geometry("800x600")
+    #signed_chapter_window.columnconfigure(0, weight=1)
+    #signed_chapter_window.rowconfigure([0,1], weight=1)
+    signed_chapter_frame_scroll = ScrollableFrame(signed_chapter_window,height=800 ,width=600)
+    signed_chapter_frame = signed_chapter_frame_scroll.frame
     
-    lbl_signed_chapter_data = tk.Label(text = 'Your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
+    lbl_signed_chapter_data = tk.Label(master = signed_chapter_frame, text = 'Your chapter has been digitally signed!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
     if status == 'error':
         lbl_signed_chapter_data.config(text = 'Oups, something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
     
-    scroll_sign_messages = scrolledtext.ScrolledText()
+    scroll_sign_messages = scrolledtext.ScrolledText(master = signed_chapter_frame)
     scroll_sign_messages.insert("1.0", result_string)
     lbl_signed_chapter_data.grid(row = 0, column = 0,sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0,sticky = 'n', padx=10)
@@ -219,7 +222,7 @@ def open_mining_window(event):
             temp = temp['chapter_data']
             signed_chapters_json.append(temp)
     
-    table_validated_chapters = ttk.Treeview(master = mining_window_frame, )
+    table_validated_chapters = ttk.Treeview(master = mining_window_frame, height = 9)
 
     table_validated_chapters['columns'] = ('story_title', 'chapter_number', 'miner_name', 'story_runtime_seconds')
     table_validated_chapters.column("#0", width=0, stretch='NO')
@@ -255,7 +258,7 @@ def open_mining_window(event):
 #    lbl_chapter_choice = tk.Label(text="Select a signed chapter below. This is the chapter that you want to add to the story.\n\nPick the story with:\n - the right title.\n - the right chapter number.\n \nYou can scroll !",justify="left")    
     lbl_chapter_choice.grid(row = 2, column = 0,  padx = 10)
     
-    table_signed_chapters = ttk.Treeview(master = mining_window_frame)
+    table_signed_chapters = ttk.Treeview(master = mining_window_frame,height = 9)
     table_signed_chapters['columns'] = ('story_title', 'chapter_number', 'author', 'chapter_title')
     table_signed_chapters.column("#0", width=0, stretch='NO')
     table_signed_chapters.column("story_title", width=100)
@@ -340,29 +343,33 @@ def open_check_window(event):
     global check_window
     check_window = tk.Tk()
     check_window.title('Check file')
-    check_window.columnconfigure(0, weight=1)
-    check_window.rowconfigure([0,1,2], weight=1)
+    check_window.geometry("800x600")
+#    check_window.columnconfigure(0, weight=1)
+#    check_window.rowconfigure([0,1,2], weight=1)
+
+    check_window_frame_scroll = ScrollableFrame(check_window,height=800 ,width=600)
+    check_window_frame = check_window_frame_scroll.frame
     
-    lbl_check_greeting = tk.Label(text="Select a file to check and then view.\n\nYou can scroll!")
+    lbl_check_greeting = tk.Label(master = check_window_frame, text="Select a file to check and then view.\n\nYou can scroll!")
     lbl_check_greeting.grid(row = 0, column = 0, padx = 10, pady = 10)
     
     file_names = sorted(glob.glob('*.json'))
     file_names.reverse()
     json_files = [import_json(f, False) for f in file_names]
     
-    table_to_check = ttk.Treeview()
+    table_to_check = ttk.Treeview(master = check_window_frame)
     table_to_check['columns'] = ('file_type', 'story_title', 'chapter_number', 'chapter_title', 'author')
     table_to_check.column("#0", width=0, stretch='NO')
     table_to_check.column("file_type", width=150)
     table_to_check.column("story_title",width=150)
-    table_to_check.column("chapter_number",width=150)
+    table_to_check.column("chapter_number",width=60)
     table_to_check.column("chapter_title",width=150)
     table_to_check.column("author",width=150)
     
     table_to_check.heading("#0",text="",)
     table_to_check.heading("file_type",text="File type")
     table_to_check.heading("story_title",text="Story title")
-    table_to_check.heading("chapter_number",text="(Last) chapter number")
+    table_to_check.heading("chapter_number",text="Chapters")
     table_to_check.heading("chapter_title",text="(Last) chapter title")
     table_to_check.heading("author",text="Author")
     
@@ -402,7 +409,7 @@ def open_check_window(event):
     table_to_check.bind('<ButtonRelease-1>', get_file_to_check)
     
     table_to_check.grid(row = 1, column = 0, padx = 10, pady = 10)
-    but_check_file = tk.Button(text = 'Check the selected file.')
+    but_check_file = tk.Button(master = check_window_frame, text = 'Check the selected file.')
     but_check_file.bind("<Button-1>", run_checks)
     but_check_file.grid(row = 2, column = 0, padx = 10, pady = 10)
     
@@ -413,8 +420,12 @@ def run_checks(event):
     check_window.destroy()
     checked_window = tk.Tk()
     checked_window.title('File checked')
-    checked_window.columnconfigure([0,1], weight=1)
-    checked_window.rowconfigure([0,1], weight=1)
+    checked_window.geometry("800x600")
+#    checked_window.columnconfigure([0,1], weight=1)
+#    checked_window.rowconfigure([0,1], weight=1)
+
+    checked_window_frame_scroll = ScrollableFrame(checked_window,height=800 ,width=600)
+    checked_window_frame = checked_window_frame_scroll.frame
     
     old_stdout = sys.stdout
     result = StringIO()
@@ -423,24 +434,24 @@ def run_checks(event):
     result_string = result.getvalue()
     sys.stdout = old_stdout
     
-    scroll_sign_messages = scrolledtext.ScrolledText()
+    scroll_sign_messages = scrolledtext.ScrolledText(master = checked_window_frame,height = 20)
     scroll_sign_messages.insert("1.0", result_string)
     if status == 'error':
-        lbl_checked_file = tk.Label(text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
+        lbl_checked_file = tk.Label(master = checked_window_frame, text = 'Something is not right.\nClose this window and try again.')
     elif status == 'check_genesis':
-        lbl_checked_file = tk.Label(text = 'Your file has been checked!\nSee the text below for a description of what happened.')
+        lbl_checked_file = tk.Label(master = checked_window_frame, text = 'File checked!')
     else:
         with open(status) as f:
             chapter_text = f.read()
-        scroll_chapter_text = scrolledtext.ScrolledText()
+        scroll_chapter_text = scrolledtext.ScrolledText(master = checked_window_frame,height = 20)
         scroll_chapter_text.insert("1.0", chapter_text)
-        lbl_checked_file = tk.Label(text = 'Your file has been checked!\nSee the text below for a description of what happened.')
-        lbl_display_text = tk.Label(text = 'You can read the text contained in the file that you checked below.\nClose this window when you are finished.')
-        lbl_display_text.grid(row = 0, column = 1, sticky = 'n', padx=10, pady = 10)
+        lbl_checked_file = tk.Label(master = checked_window_frame, text = 'File checked!')
+        lbl_display_text = tk.Label(master = checked_window_frame, text = 'Read the file content:')
+        lbl_display_text.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
         scroll_chapter_text.grid(row = 1, column = 1, sticky = 'n', padx=10, pady = 10)
         
     lbl_checked_file.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
-    scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
+    scroll_sign_messages.grid(row = 0, column = 1, sticky = 'n', padx=10, pady = 10)
     
     checked_window.mainloop()
     
