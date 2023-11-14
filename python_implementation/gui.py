@@ -175,10 +175,10 @@ def run_chapter_signature(event):
     if status == 'error':
         lbl_signed_chapter_data.config(text = 'Oups, something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
     
-    scroll_sign_messages = scrolledtext.ScrolledText(master = signed_chapter_frame)
+    scroll_sign_messages = scrolledtext.ScrolledText(master = signed_chapter_frame, height = 35, width = 105)
     scroll_sign_messages.insert("1.0", result_string)
-    lbl_signed_chapter_data.grid(row = 0, column = 0,sticky = 'n', padx=10, pady = 10)
-    scroll_sign_messages.grid(row = 1, column = 0,sticky = 'n', padx=10)
+    lbl_signed_chapter_data.grid(row = 0, column = 0, padx=10, pady = 10)
+    scroll_sign_messages.grid(row = 1, column = 0, padx=10, pady = 10)
     os.remove('temp_chapter_data.json')
     
     signed_chapter_window.mainloop()
@@ -316,8 +316,12 @@ def run_mining(event):
     mining_window.destroy()
     mined_chapter_window = tk.Tk()
     mined_chapter_window.title('Mined chapter')
-    mined_chapter_window.columnconfigure(0, weight=1)
-    mined_chapter_window.rowconfigure([0,1], weight=1)
+    mined_chapter_window.geometry("800x600")
+    #mined_chapter_window.columnconfigure(0, weight=1)
+    #mined_chapter_window.rowconfigure([0,1], weight=1)
+
+    mined_chapter_window_frame_scroll = ScrollableFrame(mined_chapter_window,height=800 ,width=600)
+    mined_chapter_window_frame = mined_chapter_window_frame_scroll.frame
     
     old_stdout = sys.stdout
     result = StringIO()
@@ -326,12 +330,12 @@ def run_mining(event):
     result_string = result.getvalue()
     sys.stdout = old_stdout
     
-    scroll_sign_messages = scrolledtext.ScrolledText()
+    scroll_sign_messages = scrolledtext.ScrolledText(master = mined_chapter_window_frame, height = 35, width = 105)
     scroll_sign_messages.insert("1.0", result_string)
     if status == 'error':
-        lbl_mined_chapter = tk.Label(text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
+        lbl_mined_chapter = tk.Label(master = mined_chapter_window_frame, text = 'Something is not right.\nSee the text below for a description of what happened.\nClose this window and try again.')
     else:
-        lbl_mined_chapter = tk.Label(text = 'Your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
+        lbl_mined_chapter = tk.Label(master = mined_chapter_window_frame, text = 'Your have mined a new chapter!\nSee the text below for a description of what happened.\nClose this window when you are finished.')
     lbl_mined_chapter.grid(row = 0, column = 0, sticky = 'n', padx=10, pady = 10)
     scroll_sign_messages.grid(row = 1, column = 0, sticky = 'n', padx=10, pady = 10)
     
@@ -357,14 +361,14 @@ def open_check_window(event):
     file_names.reverse()
     json_files = [import_json(f, False) for f in file_names]
     
-    table_to_check = ttk.Treeview(master = check_window_frame)
+    table_to_check = ttk.Treeview(master = check_window_frame, height = 22)
     table_to_check['columns'] = ('file_type', 'story_title', 'chapter_number', 'chapter_title', 'author')
     table_to_check.column("#0", width=0, stretch='NO')
     table_to_check.column("file_type", width=150)
-    table_to_check.column("story_title",width=150)
+    table_to_check.column("story_title",width=175)
     table_to_check.column("chapter_number",width=60)
-    table_to_check.column("chapter_title",width=150)
-    table_to_check.column("author",width=150)
+    table_to_check.column("chapter_title",width=175)
+    table_to_check.column("author",width=175)
     
     table_to_check.heading("#0",text="",)
     table_to_check.heading("file_type",text="File type")
@@ -437,7 +441,7 @@ def run_checks(event):
     scroll_sign_messages = scrolledtext.ScrolledText(master = checked_window_frame,height = 20)
     scroll_sign_messages.insert("1.0", result_string)
     if status == 'error':
-        lbl_checked_file = tk.Label(master = checked_window_frame, text = 'Something is not right.\nClose this window and try again.')
+        lbl_checked_file = tk.Label(master = checked_window_frame, text = 'Something is not right.\nTry again.')
     elif status == 'check_genesis':
         lbl_checked_file = tk.Label(master = checked_window_frame, text = 'File checked!')
     else:
